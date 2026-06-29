@@ -5,7 +5,7 @@ import { resolveToolchain } from "../src/toolchains";
 const REPO_ROOT = path.join(__dirname, "..");
 
 describe("resolveToolchain", () => {
-  it("resolves arm-none-eabi on linux-x64", () => {
+  it("resolves arm-none-eabi (xpack) on linux-x64", () => {
     const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "15.2.1-1.1", "linux-x64");
     expect(entry.url).toContain("arm-none-eabi");
     expect(entry.url).toContain("15.2.1-1.1");
@@ -13,21 +13,76 @@ describe("resolveToolchain", () => {
     expect(entry.sha256).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it("resolves arm-none-eabi on linux-arm64", () => {
+  it("resolves arm-none-eabi (xpack) on linux-arm64", () => {
     const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "15.2.1-1.1", "linux-arm64");
     expect(entry.url).toContain("linux-arm64");
     expect(entry.sha256).toHaveLength(64);
   });
 
-  it("resolves arm-none-eabi on windows-x64", () => {
+  it("resolves arm-none-eabi (xpack) on windows-x64", () => {
     const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "15.2.1-1.1", "windows-x64");
     expect(entry.url).toContain("win32-x64");
     expect(entry.sha256).toHaveLength(64);
   });
 
-  it("resolves aarch64-none-elf on linux-x64", () => {
+  it("resolves aarch64-none-elf (xpack) on linux-x64", () => {
     const entry = resolveToolchain(REPO_ROOT, "aarch64-none-elf", "14.2.1-1.1", "linux-x64");
     expect(entry.url).toContain("aarch64-none-elf");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves arm-none-eabi (arm official) on linux-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "14.2.rel1", "linux-x64");
+    expect(entry.url).toContain("arm-gnu-toolchain");
+    expect(entry.url).toContain("x86_64-arm-none-eabi");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves arm-none-eabi (arm official) on linux-arm64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "14.2.rel1", "linux-arm64");
+    expect(entry.url).toContain("aarch64-arm-none-eabi");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves arm-none-eabi (arm official) on windows-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "14.2.rel1", "windows-x64");
+    expect(entry.url).toContain("mingw-w64-x86_64-arm-none-eabi");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves arm-none-linux-gnueabihf on linux-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-linux-gnueabihf", "14.2.rel1", "linux-x64");
+    expect(entry.url).toContain("arm-none-linux-gnueabihf");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves arm-none-linux-gnueabihf on linux-arm64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-linux-gnueabihf", "14.2.rel1", "linux-arm64");
+    expect(entry.url).toContain("aarch64-arm-none-linux-gnueabihf");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves arm-none-linux-gnueabihf on windows-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-linux-gnueabihf", "14.2.rel1", "windows-x64");
+    expect(entry.url).toContain("mingw-w64-x86_64-arm-none-linux-gnueabihf");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves aarch64-none-linux-gnu on linux-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "aarch64-none-linux-gnu", "14.2.rel1", "linux-x64");
+    expect(entry.url).toContain("x86_64-aarch64-none-linux-gnu");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves aarch64-none-linux-gnu on linux-arm64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "aarch64-none-linux-gnu", "14.2.rel1", "linux-arm64");
+    expect(entry.url).toContain("aarch64-aarch64-none-linux-gnu");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves aarch64-none-linux-gnu on windows-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "aarch64-none-linux-gnu", "14.2.rel1", "windows-x64");
+    expect(entry.url).toContain("mingw-w64-x86_64-aarch64-none-linux-gnu");
     expect(entry.sha256).toHaveLength(64);
   });
 

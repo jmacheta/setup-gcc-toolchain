@@ -3,13 +3,14 @@ description: Download and configure a GCC cross-compilation toolchain for use in
 author: Jan Macheta
 
 branding:
-  icon: tool
-  color: blue
+  icon: cpu
+  color: black
 
 inputs:
   toolchain:
     description: >
       Toolchain variant to install. Available: arm-none-eabi, aarch64-none-elf,
+      arm-none-linux-gnueabihf, aarch64-none-linux-gnu,
       riscv-none-elf, xtensa-esp-elf, riscv32-esp-elf, avr
     required: true
   version:
