@@ -8,18 +8,18 @@
 [![Monthly](https://github.com/jmacheta/setup-gcc-toolchain/actions/workflows/monthly.yml/badge.svg)](https://github.com/jmacheta/setup-gcc-toolchain/actions/workflows/monthly.yml)
 [![Maintain Tags](https://github.com/jmacheta/setup-gcc-toolchain/actions/workflows/maintain_tags.yml/badge.svg)](https://github.com/jmacheta/setup-gcc-toolchain/actions/workflows/maintain_tags.yml)
 
-<!-- latest versions pushed to Gist by CI — replace BADGE_GIST_ID with your actual Gist ID -->
-[![arm-none-eabi](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/BADGE_GIST_ID/raw/arm-none-eabi.json)](https://gist.github.com/jmacheta/BADGE_GIST_ID)
-[![aarch64-none-elf](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/BADGE_GIST_ID/raw/aarch64-none-elf.json)](https://gist.github.com/jmacheta/BADGE_GIST_ID)
-[![riscv-none-elf](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/BADGE_GIST_ID/raw/riscv-none-elf.json)](https://gist.github.com/jmacheta/BADGE_GIST_ID)
-[![x86_64-gcc](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/BADGE_GIST_ID/raw/x86_64-gcc.json)](https://gist.github.com/jmacheta/BADGE_GIST_ID)
-[![xtensa-esp-elf](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/BADGE_GIST_ID/raw/xtensa-esp-elf.json)](https://gist.github.com/jmacheta/BADGE_GIST_ID)
-[![riscv32-esp-elf](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/BADGE_GIST_ID/raw/riscv32-esp-elf.json)](https://gist.github.com/jmacheta/BADGE_GIST_ID)
-[![avr](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/BADGE_GIST_ID/raw/avr.json)](https://gist.github.com/jmacheta/BADGE_GIST_ID)
-[![x86_64-w64-mingw32-ucrt](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/BADGE_GIST_ID/raw/x86_64-w64-mingw32-ucrt.json)](https://gist.github.com/jmacheta/BADGE_GIST_ID)
-[![x86_64-w64-mingw32-msvcrt](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/BADGE_GIST_ID/raw/x86_64-w64-mingw32-msvcrt.json)](https://gist.github.com/jmacheta/BADGE_GIST_ID)
-[![i686-w64-mingw32-ucrt](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/BADGE_GIST_ID/raw/i686-w64-mingw32-ucrt.json)](https://gist.github.com/jmacheta/BADGE_GIST_ID)
-[![i686-w64-mingw32-msvcrt](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/BADGE_GIST_ID/raw/i686-w64-mingw32-msvcrt.json)](https://gist.github.com/jmacheta/BADGE_GIST_ID)
+<!-- latest versions pushed to Gist by CI — replace 533dd887be336d666b26bf4179e67102 with your actual Gist ID -->
+[![arm-none-eabi](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/533dd887be336d666b26bf4179e67102/raw/arm-none-eabi.json)](https://gist.github.com/jmacheta/533dd887be336d666b26bf4179e67102)
+[![aarch64-none-elf](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/533dd887be336d666b26bf4179e67102/raw/aarch64-none-elf.json)](https://gist.github.com/jmacheta/533dd887be336d666b26bf4179e67102)
+[![riscv-none-elf](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/533dd887be336d666b26bf4179e67102/raw/riscv-none-elf.json)](https://gist.github.com/jmacheta/533dd887be336d666b26bf4179e67102)
+[![x86_64-gcc](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/533dd887be336d666b26bf4179e67102/raw/x86_64-gcc.json)](https://gist.github.com/jmacheta/533dd887be336d666b26bf4179e67102)
+[![xtensa-esp-elf](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/533dd887be336d666b26bf4179e67102/raw/xtensa-esp-elf.json)](https://gist.github.com/jmacheta/533dd887be336d666b26bf4179e67102)
+[![riscv32-esp-elf](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/533dd887be336d666b26bf4179e67102/raw/riscv32-esp-elf.json)](https://gist.github.com/jmacheta/533dd887be336d666b26bf4179e67102)
+[![avr](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/533dd887be336d666b26bf4179e67102/raw/avr.json)](https://gist.github.com/jmacheta/533dd887be336d666b26bf4179e67102)
+[![x86_64-w64-mingw32-ucrt](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/533dd887be336d666b26bf4179e67102/raw/x86_64-w64-mingw32-ucrt.json)](https://gist.github.com/jmacheta/533dd887be336d666b26bf4179e67102)
+[![x86_64-w64-mingw32-msvcrt](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/533dd887be336d666b26bf4179e67102/raw/x86_64-w64-mingw32-msvcrt.json)](https://gist.github.com/jmacheta/533dd887be336d666b26bf4179e67102)
+[![i686-w64-mingw32-ucrt](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/533dd887be336d666b26bf4179e67102/raw/i686-w64-mingw32-ucrt.json)](https://gist.github.com/jmacheta/533dd887be336d666b26bf4179e67102)
+[![i686-w64-mingw32-msvcrt](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jmacheta/533dd887be336d666b26bf4179e67102/raw/i686-w64-mingw32-msvcrt.json)](https://gist.github.com/jmacheta/533dd887be336d666b26bf4179e67102)
 
 Download, verify, and add a GCC cross-compilation toolchain to `PATH` in your GitHub Actions workflow. Supports ARM, AArch64, RISC-V, Xtensa (ESP32), AVR, and native x86\_64 — on Linux and Windows runners.
 
