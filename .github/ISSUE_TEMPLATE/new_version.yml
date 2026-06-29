@@ -1,0 +1,38 @@
+name: New toolchain version
+description: Request or track adding a new toolchain release to the database
+labels: [database]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        If you are able to contribute the YAML entry yourself (URL + SHA256), please open a pull request instead — it is faster for everyone.
+
+  - type: input
+    id: toolchain
+    attributes:
+      label: Toolchain name
+      placeholder: "arm-none-eabi"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version string
+      placeholder: "15.3.0-1.1"
+    validations:
+      required: true
+
+  - type: input
+    id: release_url
+    attributes:
+      label: Upstream release URL
+      description: Link to the vendor's GitHub releases page or download page.
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Anything unusual about this release (new platform support, renamed binary, etc.).

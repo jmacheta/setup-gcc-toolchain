@@ -1,0 +1,50 @@
+name: New toolchain variant
+description: Request support for a toolchain not yet in the database
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please describe the toolchain you need. New variants require agreement on scope before implementation, so an issue is the right starting point.
+
+  - type: input
+    id: toolchain
+    attributes:
+      label: Proposed toolchain name
+      description: The `toolchain:` input value you would like to use.
+      placeholder: "xtensa-lx106-elf"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What is this toolchain for?
+      description: Target architecture, use case, typical projects.
+    validations:
+      required: true
+
+  - type: input
+    id: vendor
+    attributes:
+      label: Upstream vendor / download source
+      placeholder: "https://github.com/espressif/crosstool-NG/releases"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platforms
+    attributes:
+      label: Required runner platforms
+      multiple: true
+      options:
+        - Linux x86_64
+        - Linux ARM64
+        - Windows x86_64
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context

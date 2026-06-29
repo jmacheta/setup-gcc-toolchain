@@ -1,0 +1,58 @@
+name: Bug report
+description: Something is broken in the action
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please check [existing issues](https://github.com/jmacheta/setup-gcc-toolchain/issues) and the [CI status badges](https://github.com/jmacheta/setup-gcc-toolchain#readme) to see if this is a known problem.
+
+  - type: dropdown
+    id: runner
+    attributes:
+      label: Runner OS
+      options:
+        - ubuntu-latest (x86_64)
+        - ubuntu-24.04-arm (ARM64)
+        - windows-latest
+        - other
+    validations:
+      required: true
+
+  - type: input
+    id: toolchain
+    attributes:
+      label: Toolchain
+      placeholder: "arm-none-eabi"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: "15.2.1-1.1 or latest"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Action log
+      description: Paste the full log output from the failing step (use a code block).
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow snippet
+      description: The relevant part of your workflow YAML.
+      render: yaml
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Anything else that might help reproduce the issue.

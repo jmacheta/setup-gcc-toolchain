@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Actions documentation
+    url: https://docs.github.com/en/actions
+    about: General help with GitHub Actions workflows
