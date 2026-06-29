@@ -143,11 +143,12 @@ async function verifyOnPath(binPath: string, toolchainName: string): Promise<voi
 
 async function run(): Promise<void> {
   const toolchainName = core.getInput("toolchain", { required: true });
+  const vendor = core.getInput("vendor") || undefined;
   const version = core.getInput("version", { required: true });
   const enableCache = core.getInput("enable-cache") !== "false";
 
   const repoRoot = path.join(__dirname, "..");
-  const entry = resolveToolchain(repoRoot, toolchainName, version);
+  const entry = resolveToolchain(repoRoot, toolchainName, version, undefined, vendor);
 
   const resolvedVersion = version === "latest"
     ? path.basename(entry.url).match(/[\d.]+[-_][\d.]+/)?.[0] ?? version

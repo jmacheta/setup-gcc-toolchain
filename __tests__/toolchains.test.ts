@@ -121,6 +121,24 @@ describe("resolveToolchain", () => {
     ).toThrow(/No toolchain database available/);
   });
 
+  it("resolves arm-none-eabi with explicit xpack vendor", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "15.2.1-1.1", "linux-x64", "xpack");
+    expect(entry.url).toContain("15.2.1-1.1");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves arm-none-eabi with explicit arm vendor", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "14.2.rel1", "linux-x64", "arm");
+    expect(entry.url).toContain("arm-gnu-toolchain");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("throws for unknown vendor", () => {
+    expect(() =>
+      resolveToolchain(REPO_ROOT, "arm-none-eabi", "latest", "linux-x64", "nonexistent-vendor")
+    ).toThrow(/vendor/);
+  });
+
   it("throws for unknown toolchain with helpful message", () => {
     expect(() =>
       resolveToolchain(REPO_ROOT, "nonexistent-gcc", "1.0.0", "linux-x64")
