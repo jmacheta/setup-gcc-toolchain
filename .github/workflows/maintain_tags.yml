@@ -1,0 +1,16 @@
+name: Maintain Tags
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  tags:
+    name: 🏷️ Update version tags
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔁 Update major/minor version tags
+        uses: cssnr/update-version-tags-action@dc7077eaec04b8fd61f7b7e6d4830564cfd12382 # v2.1.1

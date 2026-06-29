@@ -57,6 +57,27 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: npm run validate:full -- --concurrency 30
 
+  update-version-badges:
+    name: Update version badges (Gist)
+    needs: validate-database
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Push latest versions to Gist
+        env:
+          GIST_ID: ${{ vars.BADGE_GIST_ID }}
+          GIST_TOKEN: ${{ secrets.BADGE_GIST_TOKEN }}
+        run: node scripts/update-version-badges.mjs
+
   smoke-test-linux:
     name: Smoke test — Linux
     needs: build-and-test
