@@ -51,6 +51,66 @@ function findToolchainRoot(installDir: string): string {
   return entries.length === 1 ? path.join(installDir, entries[0]) : installDir;
 }
 
+const GCC_TOOLS = [
+  "gcc", "g++", "cpp", "ar", "as", "ld", "nm",
+  "objcopy", "objdump", "ranlib", "readelf", "size", "strings", "strip", "gdb",
+];
+
+async function runDumpMachine(gccPath: string): Promise<string | undefined> {
+  let output = "";
+  const code = await exec.exec(`"${gccPath}"`, ["-dumpmachine"], {
+    silent: true,
+    ignoreReturnCode: true,
+    listeners: { stdout: (d) => { output += d.toString(); } },
+  });
+  if (code !== 0) return undefined;
+  return output.trim() || undefined;
+}
+
+async function createTripletSymlinks(binPath: string): Promise<void> {
+  const ext = process.platform === "win32" ? ".exe" : "";
+
+  // Find the gcc binary — either bare "gcc" or prefixed "<triplet>-gcc"
+  let gccBin: string | undefined;
+  let existingPrefix: string | undefined;
+
+  const bare = path.join(binPath, "gcc" + ext);
+  if (fs.existsSync(bare)) {
+    gccBin = bare;
+    existingPrefix = "";
+  } else {
+    const entry = fs.readdirSync(binPath).find((f) => f.endsWith("-gcc" + ext));
+    if (entry) {
+      gccBin = path.join(binPath, entry);
+      existingPrefix = entry.slice(0, -("-gcc" + ext).length);
+    }
+  }
+
+  if (!gccBin) return;
+
+  const triplet = await runDumpMachine(gccBin);
+  if (!triplet) return;
+
+  // No symlinks needed when the binary prefix already matches the triplet
+  if (existingPrefix === triplet) return;
+
+  let created = 0;
+  for (const tool of GCC_TOOLS) {
+    const src = path.join(binPath, (existingPrefix ? `${existingPrefix}-` : "") + tool + ext);
+    const dest = path.join(binPath, `${triplet}-${tool}${ext}`);
+
+    if (!fs.existsSync(src)) continue;
+    if (fs.existsSync(dest)) continue;
+
+    fs.symlinkSync(src, dest);
+    created++;
+  }
+
+  if (created > 0) {
+    core.info(`Created ${created} symlink(s) with triplet prefix "${triplet}"`);
+  }
+}
+
 async function verifyOnPath(binPath: string, toolchainName: string): Promise<void> {
   // Derive a sensible binary name to probe: use the triplet prefix if present,
   // otherwise plain "gcc". For winlibs mingw the binary is e.g. x86_64-w64-mingw32-gcc.
@@ -83,11 +143,12 @@ async function verifyOnPath(binPath: string, toolchainName: string): Promise<voi
 
 async function run(): Promise<void> {
   const toolchainName = core.getInput("toolchain", { required: true });
+  const vendor = core.getInput("vendor") || undefined;
   const version = core.getInput("version", { required: true });
   const enableCache = core.getInput("enable-cache") !== "false";
 
   const repoRoot = path.join(__dirname, "..");
-  const entry = resolveToolchain(repoRoot, toolchainName, version);
+  const entry = resolveToolchain(repoRoot, toolchainName, version, undefined, vendor);
 
   const resolvedVersion = version === "latest"
     ? path.basename(entry.url).match(/[\d.]+[-_][\d.]+/)?.[0] ?? version
@@ -150,6 +211,11 @@ async function run(): Promise<void> {
   core.setOutput("cache-hit", String(cacheHit));
 
   core.info(`Added to PATH (first position): ${binPath}`);
+
+  if (process.platform !== "win32") {
+    await createTripletSymlinks(binPath);
+  }
+
   await verifyOnPath(binPath, toolchainName);
 }
 
