@@ -1,0 +1,174 @@
+name: Weekly
+
+on:
+  schedule:
+    - cron: "0 3 * * 0"  # 03:00 UTC every Sunday
+  workflow_dispatch:
+
+jobs:
+  validate-urls:
+    name: Validate all URLs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Full database validation (structure + sha256 + URL reachability)
+        run: npm run validate:full -- --concurrency 30
+
+  smoke-latest-linux:
+    name: Smoke — ${{ matrix.toolchain }} latest (Linux ${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            arch: x64
+            toolchain: arm-none-eabi
+            binary: arm-none-eabi-gcc
+          - runner: ubuntu-latest
+            arch: x64
+            toolchain: aarch64-none-elf
+            binary: aarch64-none-elf-gcc
+          - runner: ubuntu-latest
+            arch: x64
+            toolchain: riscv-none-elf
+            binary: riscv-none-elf-gcc
+          - runner: ubuntu-latest
+            arch: x64
+            toolchain: x86_64-gcc
+            binary: gcc
+          - runner: ubuntu-latest
+            arch: x64
+            toolchain: xtensa-esp-elf
+            binary: xtensa-esp-elf-gcc
+          - runner: ubuntu-latest
+            arch: x64
+            toolchain: riscv32-esp-elf
+            binary: riscv32-esp-elf-gcc
+          - runner: ubuntu-latest
+            arch: x64
+            toolchain: avr
+            binary: avr-gcc
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+            toolchain: arm-none-eabi
+            binary: arm-none-eabi-gcc
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+            toolchain: aarch64-none-elf
+            binary: aarch64-none-elf-gcc
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+            toolchain: riscv-none-elf
+            binary: riscv-none-elf-gcc
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+            toolchain: x86_64-gcc
+            binary: gcc
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+            toolchain: xtensa-esp-elf
+            binary: xtensa-esp-elf-gcc
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+            toolchain: riscv32-esp-elf
+            binary: riscv32-esp-elf-gcc
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup ${{ matrix.toolchain }} latest
+        uses: ./
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          version: latest
+          enable-cache: false
+
+      - name: Verify binary is first in PATH
+        run: |
+          which ${{ matrix.binary }}
+          ${{ matrix.binary }} --version
+          first=$(which ${{ matrix.binary }})
+          if [[ "$first" != "$RUNNER_TEMP"* ]]; then
+            echo "ERROR: expected binary under RUNNER_TEMP, got $first"
+            exit 1
+          fi
+
+  smoke-latest-windows:
+    name: Smoke — ${{ matrix.toolchain }} latest (Windows)
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - toolchain: arm-none-eabi
+            binary: arm-none-eabi-gcc
+          - toolchain: aarch64-none-elf
+            binary: aarch64-none-elf-gcc
+          - toolchain: riscv-none-elf
+            binary: riscv-none-elf-gcc
+          - toolchain: x86_64-gcc
+            binary: gcc
+          - toolchain: avr
+            binary: avr-gcc
+          - toolchain: x86_64-w64-mingw32-ucrt
+            binary: x86_64-w64-mingw32-gcc
+          - toolchain: x86_64-w64-mingw32-msvcrt
+            binary: x86_64-w64-mingw32-gcc
+          - toolchain: i686-w64-mingw32-ucrt
+            binary: i686-w64-mingw32-gcc
+          - toolchain: i686-w64-mingw32-msvcrt
+            binary: i686-w64-mingw32-gcc
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup ${{ matrix.toolchain }} latest
+        uses: ./
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          version: latest
+          enable-cache: false
+
+      - name: Verify binary is first in PATH
+        run: |
+          $bin = (Get-Command ${{ matrix.binary }}).Source
+          Write-Host "Found at: $bin"
+          & ${{ matrix.binary }} --version
+          if (-not $bin.StartsWith($env:RUNNER_TEMP)) {
+            Write-Error "Expected binary under RUNNER_TEMP, got $bin"
+            exit 1
+          }
+        shell: pwsh
+
+  notify-on-failure:
+    name: Notify on failure
+    runs-on: ubuntu-latest
+    needs: [validate-urls, smoke-latest-linux, smoke-latest-windows]
+    if: failure()
+    steps:
+      - name: Create issue on failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `Nightly checks failed — ${new Date().toISOString().slice(0, 10)}`;
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'nightly-failure',
+            });
+            if (existing.data.some(i => i.title === title)) return;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body: `Nightly workflow failed: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              labels: ['nightly-failure'],
+            });

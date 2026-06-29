@@ -1,0 +1,147 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: Build & unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build bundle
+        run: npm run build
+
+      - name: Verify dist is committed
+        run: |
+          if ! git diff --quiet dist/; then
+            echo "dist/index.js is out of date. Run 'npm run build' and commit the result."
+            git diff dist/
+            exit 1
+          fi
+
+  validate-database:
+    name: Validate toolchain database
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Structure & SHA256 format (always)
+        run: npm run validate
+
+      - name: URL reachability (on push to main only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: npm run validate:full -- --concurrency 30
+
+  smoke-test-linux:
+    name: Smoke test — Linux
+    needs: build-and-test
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-latest
+            toolchain: arm-none-eabi
+            version: "15.2.1-1.1"
+            binary: arm-none-eabi-gcc
+          - runner: ubuntu-latest
+            toolchain: riscv-none-elf
+            version: "15.2.1-1.1"
+            binary: riscv-none-elf-gcc
+          - runner: ubuntu-latest
+            toolchain: x86_64-gcc
+            version: "15.2.0-1"
+            binary: gcc
+          - runner: ubuntu-24.04-arm
+            toolchain: arm-none-eabi
+            version: "15.2.1-1.1"
+            binary: arm-none-eabi-gcc
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup ${{ matrix.toolchain }} ${{ matrix.version }}
+        uses: ./
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          version: ${{ matrix.version }}
+
+      - name: Verify binary is on PATH and responds
+        run: |
+          which ${{ matrix.binary }}
+          ${{ matrix.binary }} --version
+
+      - name: Verify toolchain is first in PATH
+        run: |
+          first=$(which ${{ matrix.binary }})
+          echo "Found at: $first"
+          echo "PATH=$PATH"
+          # Ensure it comes from RUNNER_TEMP, not a pre-installed location
+          if [[ "$first" != "$RUNNER_TEMP"* ]]; then
+            echo "ERROR: expected binary under RUNNER_TEMP, got $first"
+            exit 1
+          fi
+
+  smoke-test-windows:
+    name: Smoke test — Windows
+    needs: build-and-test
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - toolchain: arm-none-eabi
+            version: "15.2.1-1.1"
+            binary: arm-none-eabi-gcc
+          - toolchain: x86_64-w64-mingw32-ucrt
+            version: "16.1.0"
+            binary: x86_64-w64-mingw32-gcc
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup ${{ matrix.toolchain }} ${{ matrix.version }}
+        uses: ./
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          version: ${{ matrix.version }}
+
+      - name: Verify binary is on PATH and responds
+        run: |
+          $path = (Get-Command ${{ matrix.binary }}).Source
+          Write-Host "Found at: $path"
+          & ${{ matrix.binary }} --version
+        shell: pwsh
+
+      - name: Verify toolchain is first in PATH
+        run: |
+          $path = (Get-Command ${{ matrix.binary }}).Source
+          Write-Host "Found at: $path"
+          if (-not $path.StartsWith($env:RUNNER_TEMP)) {
+            Write-Error "Expected binary under RUNNER_TEMP, got $path"
+            exit 1
+          }
+        shell: pwsh

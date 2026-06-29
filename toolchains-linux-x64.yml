@@ -1,0 +1,467 @@
+# GCC Toolchain Database — Linux x86_64 runner
+# Structure: vendor -> toolchain -> version -> {url, sha256}
+# Sources:
+#   xpack:      https://github.com/xpack-dev-tools
+#   espressif:  https://github.com/espressif/crosstool-NG
+#   zakkemble:  https://github.com/ZakKemble/avr-gcc-build
+#   winlibs:    https://github.com/brechtsanders/winlibs_mingw
+
+xpack:
+
+  arm-none-eabi:
+    description: ARM bare-metal (Cortex-M/R, no OS)
+    versions:
+      "15.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v15.2.1-1.1/xpack-arm-none-eabi-gcc-15.2.1-1.1-linux-x64.tar.gz
+        sha256: da6a49ad4003944b823c6c93702a8787c922ab34bd7e918ec0eaf6933a9b1ff6
+      "14.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v14.2.1-1.1/xpack-arm-none-eabi-gcc-14.2.1-1.1-linux-x64.tar.gz
+        sha256: ed8c7d207a85d00da22b90cf80ab3b0b2c7600509afadf6b7149644e9d4790a6
+      "13.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v13.3.1-1.1/xpack-arm-none-eabi-gcc-13.3.1-1.1-linux-x64.tar.gz
+        sha256: 006c89337eced277fdf4c1c3bf3aebe55c85e8d52cba8d412009717fb781b959
+      "13.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v13.2.1-1.1/xpack-arm-none-eabi-gcc-13.2.1-1.1-linux-x64.tar.gz
+        sha256: 1252a8cafe9237de27a765376697230368eec21db44dc3f1edeb8d838dabd530
+      "12.3.1-1.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v12.3.1-1.2/xpack-arm-none-eabi-gcc-12.3.1-1.2-linux-x64.tar.gz
+        sha256: 771dfb9d10e7339ac40f3a32be9cd287405c537ca0bf16e1dbf6fa6f1fc1dd2a
+      "12.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v12.3.1-1.1/xpack-arm-none-eabi-gcc-12.3.1-1.1-linux-x64.tar.gz
+        sha256: 83b869765862bcf029966c82a258d9b330878e2570a277d82fc90af5e88077a4
+      "12.2.1-1.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v12.2.1-1.2/xpack-arm-none-eabi-gcc-12.2.1-1.2-linux-x64.tar.gz
+        sha256: 65b52009ff1b7f22f5e030cc04e17e5e7d7f2436a62488aca905062a71d3944c
+      "12.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v12.2.1-1.1/xpack-arm-none-eabi-gcc-12.2.1-1.1-linux-x64.tar.gz
+        sha256: c866d6a260833acb30d9b3d36241d781dbfaa5c50affa580e4e57f905167f974
+      "11.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v11.3.1-1.1/xpack-arm-none-eabi-gcc-11.3.1-1.1-linux-x64.tar.gz
+        sha256: df515ea5b2efb625f1cf1e11c3d096c4ddf800408ee2bd061a67b7739a5febff
+      "11.2.1-1.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v11.2.1-1.2/xpack-arm-none-eabi-gcc-11.2.1-1.2-linux-x64.tar.gz
+        sha256: 7479becc1ea98fbceecadf1f036ddaba8dc39c9cce5cb45f0a7a36e923d33c9a
+      "11.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v11.2.1-1.1/xpack-arm-none-eabi-gcc-11.2.1-1.1-linux-x64.tar.gz
+        sha256: 898649436d523b4dc552fb5602a9511089bb30e7df1cba3db401e895c04f12b9
+      "10.3.1-2.3":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v10.3.1-2.3/xpack-arm-none-eabi-gcc-10.3.1-2.3-linux-x64.tar.gz
+        sha256: 559dcf1c2dfddac513110fe23da0ef254032c09967eaa901f075515d51818719
+      "10.3.1-2.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v10.3.1-2.2/xpack-arm-none-eabi-gcc-10.3.1-2.2-linux-x64.tar.gz
+        sha256: 5ac203fdff965e77c07bb24509da740decb8da91f4d266414abe90401da3fd28
+      "10.3.1-2.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v10.3.1-2.1/xpack-arm-none-eabi-gcc-10.3.1-2.1-linux-x64.tar.gz
+        sha256: eb4c7cb16ac1ab7d629ce807847692d5add9f13f23a3196fc545acc6f410a8cf
+      "10.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v10.2.1-1.1/xpack-arm-none-eabi-gcc-10.2.1-1.1-linux-x64.tar.gz
+        sha256: 840e90b527d30143b8d8e5eb894218858ed14226bdc8664686f0848592b6e474
+      "9.3.1-1.4":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v9.3.1-1.4/xpack-arm-none-eabi-gcc-9.3.1-1.4-linux-x64.tar.gz
+        sha256: 720dd38a6abadc0286f2b3c8dbc7239c7dbfdd64bc052345d149657e5478b914
+      "9.3.1-1.3":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v9.3.1-1.3/xpack-arm-none-eabi-gcc-9.3.1-1.3-linux-x64.tar.gz
+        sha256: 9045d261b000d921887fc801427542eed2df1616f63a2969a2640f8be2593686
+      "9.3.1-1.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v9.3.1-1.2/xpack-arm-none-eabi-gcc-9.3.1-1.2-linux-x64.tar.gz
+        sha256: ada5b1e4d4fd6f6ffe80c398188eab5d2fc43639cb219fe212576f4bc2ebe35a
+      "9.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v9.3.1-1.1/xpack-arm-none-eabi-gcc-9.3.1-1.1-linux-x64.tar.gz
+        sha256: 10b859d83c7a451add58eaf79afdb9a4a66fc38920884e8a54c809e0a1f4ed3e
+      "9.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v9.2.1-1.1/xpack-arm-none-eabi-gcc-9.2.1-1.1-linux-x64.tar.gz
+        sha256: bbde117b97f229dfe63721c0323c3da6839e83cf302c8f4ff25e0f36ecf7a428
+      "8.3.1-1.4":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v8.3.1-1.4/xpack-arm-none-eabi-gcc-8.3.1-1.4-linux-x64.tar.gz
+        sha256: 31338c3b8bdb32d9082a857f6d65a57c033e7d6eba1662a30c7fb3e83ff46597
+      "8.3.1-1.3":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v8.3.1-1.3/xpack-arm-none-eabi-gcc-8.3.1-1.3-linux-x64.tgz
+        sha256: b50cdb1cf8146aa441db68dd41fb6eb052ea2992fe94bcab54d27930e63b2af7
+      "8.3.1-1.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v8.3.1-1.2/xpack-arm-none-eabi-gcc-8.3.1-1.2-linux-x64.tgz
+        sha256: a5e76ad1b89a1cf0ef5be5be5e8de862452f388e041d59dede237c5b27a15c5b
+      "8.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v8.3.1-1.1/xpack-arm-none-eabi-gcc-8.3.1-1.1-linux-x64.tgz
+        sha256: 2e49bdb076ed96cdde2b8320d9496875eccd7eb83d2af0dc378e02dd17aedec4
+      "7.3.1-1.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v7.3.1-1.2/xpack-arm-none-eabi-gcc-7.3.1-1.2-linux-x64.tgz
+        sha256: c5c76a218f9b847c51d354c0f994de0cac5e7568a3b58e0ca04ce3d36f4eab0e
+
+  aarch64-none-elf:
+    description: AArch64 bare-metal (no OS)
+    versions:
+      "15.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v15.2.1-1.1/xpack-aarch64-none-elf-gcc-15.2.1-1.1-linux-x64.tar.gz
+        sha256: 052e1aadd7b3adde960299f50da956eb34c1503a7299b5bea3a330d9407bf250
+      "14.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v14.2.1-1.1/xpack-aarch64-none-elf-gcc-14.2.1-1.1-linux-x64.tar.gz
+        sha256: a2c9731f3c2a0abfdfa1e285de82d806e07a580a5fef4be59aac952c6b67b117
+      "13.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v13.3.1-1.1/xpack-aarch64-none-elf-gcc-13.3.1-1.1-linux-x64.tar.gz
+        sha256: f76dc6d105f054fcb3f2a39ecf206d99101dc87931a5b9227fe886cb9478b667
+      "13.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v13.2.1-1.1/xpack-aarch64-none-elf-gcc-13.2.1-1.1-linux-x64.tar.gz
+        sha256: bda035138579b596d7b0ca8815c06d11df24e063bd12c2a5c410f5ad61ec67a4
+      "12.3.1-2.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v12.3.1-2.1/xpack-aarch64-none-elf-gcc-12.3.1-2.1-linux-x64.tar.gz
+        sha256: 6063a0fd5b4bd1445bf0db1521839e2bb43daa2d3b974a2d9a8b8a76a8b9bcf3
+      "12.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v12.3.1-1.1/xpack-aarch64-none-elf-gcc-12.3.1-1.1-linux-x64.tar.gz
+        sha256: b8567f486e9f5475494d8cb4177481024085c635be989a055cc4fdc89ef79e4f
+      "12.2.1-1.2":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v12.2.1-1.2/xpack-aarch64-none-elf-gcc-12.2.1-1.2-linux-x64.tar.gz
+        sha256: a908ed7722469d15e0ccd453d13b8613809e434091690a794d1f4db6d386f111
+      "12.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v12.2.1-1.1/xpack-aarch64-none-elf-gcc-12.2.1-1.1-linux-x64.tar.gz
+        sha256: 20c3255b0f9d35b4715351972470f2f3e09b77669c2c85627b4e81e16cc5a2e6
+      "11.3.1-1.2":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v11.3.1-1.2/xpack-aarch64-none-elf-gcc-11.3.1-1.2-linux-x64.tar.gz
+        sha256: 1179481f8762ec1bbeda54eb1520a10187fca70d21aef37c3207ddf21e6cb8c9
+      "11.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v11.3.1-1.1/xpack-aarch64-none-elf-gcc-11.3.1-1.1-linux-x64.tar.gz
+        sha256: 60c9d00697981f7e721f81df69a830b4c9d3da52f3cb53f8ae86420faa808864
+      "11.2.1-1.2":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v11.2.1-1.2/xpack-aarch64-none-elf-gcc-11.2.1-1.2-linux-x64.tar.gz
+        sha256: e14ac6851317da56d192757e028460afc64b998c446d97b3761873a2b91058d8
+      "11.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v11.2.1-1.1/xpack-aarch64-none-elf-gcc-11.2.1-1.1-linux-x64.tar.gz
+        sha256: f422b9a3a26c9801598233c9621d218c3c268547ed302d390061b2e9103bd188
+
+  riscv-none-elf:
+    description: RISC-V bare-metal (RV32/RV64, no OS)
+    versions:
+      "15.2.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v15.2.0-1/xpack-riscv-none-elf-gcc-15.2.0-1-linux-x64.tar.gz
+        sha256: aaaa8060c914851a3e5ee1ba82cc3d6f80972f90638a05c6e823a37557a33758
+      "14.3.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v14.3.0-1/xpack-riscv-none-elf-gcc-14.3.0-1-linux-x64.tar.gz
+        sha256: be1768ef22789f4d9c41384e0261996f51724b84c2efa940d975dd7d9938c726
+      "14.2.0-3":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v14.2.0-3/xpack-riscv-none-elf-gcc-14.2.0-3-linux-x64.tar.gz
+        sha256: f574415b63f12b09bdd3475223ab492a465d23810646c90c13a4c3b676c83503
+      "14.2.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v14.2.0-2/xpack-riscv-none-elf-gcc-14.2.0-2-linux-x64.tar.gz
+        sha256: 0ab93937aab882c3a69f63eff4fe8fc6e360e4a23776004fa116ad692e699d23
+      "14.2.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v14.2.0-1/xpack-riscv-none-elf-gcc-14.2.0-1-linux-x64.tar.gz
+        sha256: a5eb707595e1424ff4127cc8b21b8b8cb076e6f0070b670485e72b9f74806200
+      "14.1.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v14.1.0-1/xpack-riscv-none-elf-gcc-14.1.0-1-linux-x64.tar.gz
+        sha256: eb6d3b4923e680349e74c0de2f21dbc03141dc45b8665da2a784d0ff4b0df9ef
+      "13.4.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.4.0-1/xpack-riscv-none-elf-gcc-13.4.0-1-linux-x64.tar.gz
+        sha256: 2f669492e131906f21641de3ed5cb808d17eff2716b551c73651fe6650565a5f
+      "13.3.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.3.0-2/xpack-riscv-none-elf-gcc-13.3.0-2-linux-x64.tar.gz
+        sha256: 41db92866f351fa1e153d706a4a6275099bc9564c1065db2c9b83b97b512e54c
+      "13.3.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.3.0-1/xpack-riscv-none-elf-gcc-13.3.0-1-linux-x64.tar.gz
+        sha256: 5386d1a7b261d37a6c34e644fc01ed2562132a9fae3e314083f64ad5e8cceb16
+      "13.2.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.2.0-2/xpack-riscv-none-elf-gcc-13.2.0-2-linux-x64.tar.gz
+        sha256: 52545afb900200fbf65fe05f7ce7090b8a42c64091f4f5d43cae6bb68ea2434a
+      "13.2.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.2.0-1/xpack-riscv-none-elf-gcc-13.2.0-1-linux-x64.tar.gz
+        sha256: d7eff5c5d778873c3d486e5d2c805b82582e73081f93edb375a1ef5d84764b43
+      "12.5.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.5.0-1/xpack-riscv-none-elf-gcc-12.5.0-1-linux-x64.tar.gz
+        sha256: 624fae17fb5dfaa0d8a9f8b345c9831cca9e06322a34254342a19eea61915e82
+      "12.4.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.4.0-2/xpack-riscv-none-elf-gcc-12.4.0-2-linux-x64.tar.gz
+        sha256: 589eb2b600853a2aa1f759aa8997fce1941dcba9413ab50ff63326cb2d46e6b0
+      "12.4.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.4.0-1/xpack-riscv-none-elf-gcc-12.4.0-1-linux-x64.tar.gz
+        sha256: 82acd24ef676aee41be5c9be2283f901af4b5ed5d9896fe49e17726c565070bc
+      "12.3.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.3.0-2/xpack-riscv-none-elf-gcc-12.3.0-2-linux-x64.tar.gz
+        sha256: 9921d63c04611954af016b9ca74cd52c1ccb832800d321d67e4e651f16146d16
+      "12.3.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.3.0-1/xpack-riscv-none-elf-gcc-12.3.0-1-linux-x64.tar.gz
+        sha256: 0a7f71150e7b284a01ef739a17a32bafce5db43c012d734d57be5a8c2e2b57b6
+      "12.2.0-3":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.2.0-3/xpack-riscv-none-elf-gcc-12.2.0-3-linux-x64.tar.gz
+        sha256: 0bb5f0c6a36f5197888fcd176e3734ec5b74167b5a631883f72ae3cbd47a97c3
+      "12.2.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.2.0-2/xpack-riscv-none-elf-gcc-12.2.0-2-linux-x64.tar.gz
+        sha256: bc3bb92b7258bbc60aa763aef3f435a41917f1588e9c0da142815225fe3a43f4
+      "12.2.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.2.0-1/xpack-riscv-none-elf-gcc-12.2.0-1-linux-x64.tar.gz
+        sha256: 04b5f45d609b221505e9232b1b63ae6cdb17d0a23f13ce9c231fc4008753a58a
+      "12.1.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.1.0-2/xpack-riscv-none-elf-gcc-12.1.0-2-linux-x64.tar.gz
+        sha256: 0df95d28487b5e55eb48c487bfc8951a23ef97080a8621dd4109586f51dc177e
+      "12.1.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.1.0-1/xpack-riscv-none-elf-gcc-12.1.0-1-linux-x64.tar.gz
+        sha256: d6dc108ab53a41df3036f57cae4d0e538fb0d47c7b4d5fc8bb1b5499a64a2cdc
+      "11.5.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v11.5.0-2/xpack-riscv-none-elf-gcc-11.5.0-2-linux-x64.tar.gz
+        sha256: 85d08018b5c97b5d7ed293ad4370e5044030724f72e2ee98e1816698f76a7ce3
+      "11.5.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v11.5.0-1/xpack-riscv-none-elf-gcc-11.5.0-1-linux-x64.tar.gz
+        sha256: 38cf0a7b885e21e3b0a88cde401b1a56290eb7856dab46a50bf05ec4f506df86
+      "11.3.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v11.3.0-1/xpack-riscv-none-elf-gcc-11.3.0-1-linux-x64.tar.gz
+        sha256: 1c99fb1573ff2ed5deffce64cb96bb9272f351f054684c49dfd5ad41c6dd804d
+
+  x86_64-gcc:
+    description: Native x86_64 GCC (no cross prefix)
+    versions:
+      "15.2.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v15.2.0-1/xpack-gcc-15.2.0-1-linux-x64.tar.gz
+        sha256: f6dcc3815299a23b2b4372223c4ca5f1b5a0543ed097d57eb67e0753b7c484e0
+      "14.3.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v14.3.0-1/xpack-gcc-14.3.0-1-linux-x64.tar.gz
+        sha256: 93bc0add266a50626861d571cce92667b8d42e2770f3f321b3c8df096cee5bf1
+      "14.2.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v14.2.0-2/xpack-gcc-14.2.0-2-linux-x64.tar.gz
+        sha256: d27b09c677cefde24bdaacdde045d35ea1a391fbb5b4525d057e1974af912c4d
+      "14.2.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v14.2.0-1/xpack-gcc-14.2.0-1-linux-x64.tar.gz
+        sha256: f1a5db554874b27812e6286d242200430d9c5fb62bc04f4e59d6fe47d498af5a
+      "14.1.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v14.1.0-1/xpack-gcc-14.1.0-1-linux-x64.tar.gz
+        sha256: de4ccdbe8691fb661c8f231a75a28796720a5ce95ee0fbaf63f7883eec7c42fe
+      "13.4.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v13.4.0-1/xpack-gcc-13.4.0-1-linux-x64.tar.gz
+        sha256: 6d2795abc171108797b24319405ac3331f3a3c1c700f7181bb5542a67782f8e4
+      "13.3.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v13.3.0-2/xpack-gcc-13.3.0-2-linux-x64.tar.gz
+        sha256: a3bf33a3299b17730ce7a24912729830219e0a8db1e8170e6931e0ff46ec3bce
+      "13.3.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v13.3.0-1/xpack-gcc-13.3.0-1-linux-x64.tar.gz
+        sha256: deeb1e7eb96e7d633d6af3a09f89f9953d9cc562c3aed7e836a7a81c5e184a85
+      "13.2.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v13.2.0-2/xpack-gcc-13.2.0-2-linux-x64.tar.gz
+        sha256: 026fd0cddf66bec8f83f7231204ac0642727cb1bc0cfc6ea44acac01e1639e88
+      "13.2.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v13.2.0-1/xpack-gcc-13.2.0-1-linux-x64.tar.gz
+        sha256: 54c37d730baf27678bd1b4dae23ab7962b1bc6cf2d73a588deb69003c61dd289
+      "12.5.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.5.0-1/xpack-gcc-12.5.0-1-linux-x64.tar.gz
+        sha256: b6d99fc0c66261cfca90d8b765c6cdbe11f358fb28fd503672d1d2b324424872
+      "12.4.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.4.0-2/xpack-gcc-12.4.0-2-linux-x64.tar.gz
+        sha256: 58a53270c2150e42c45ecd758c74a29d4a5f01c40861b1988309adcd5a45e069
+      "12.4.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.4.0-1/xpack-gcc-12.4.0-1-linux-x64.tar.gz
+        sha256: 4dcb6b82d5c00e6aa4f9c72c8457e657cfdf19fd753c33f261aa5e91d8d73aa9
+      "12.3.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.3.0-2/xpack-gcc-12.3.0-2-linux-x64.tar.gz
+        sha256: 9d6460a0042bddd824afd05ace7190f6ed057972111efe5dacfa6435fc85e9ff
+      "12.3.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.3.0-1/xpack-gcc-12.3.0-1-linux-x64.tar.gz
+        sha256: fdb682ab7a53fcdcef7cdb55e45a90acfbb65373f976898e4f2af2f57f58b0c0
+      "12.2.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.2.0-2/xpack-gcc-12.2.0-2-linux-x64.tar.gz
+        sha256: d5ad6d979f6d8e5a00a786c58a60a27473e5ac8996e09efb8195cdaf2bc20123
+      "12.2.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.2.0-1/xpack-gcc-12.2.0-1-linux-x64.tar.gz
+        sha256: 771441aceb6d782f7cad7070f9ec1243cfa6c592a5cb1b269022d6828b2a8558
+      "12.1.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.1.0-1/xpack-gcc-12.1.0-1-linux-x64.tar.gz
+        sha256: 62c132ab22f0b558864f6d2b1642742330637f21821c4f91c3721a8958baac5e
+      "11.5.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.5.0-2/xpack-gcc-11.5.0-2-linux-x64.tar.gz
+        sha256: 853067193ac7f22ada75038e13a40bad01874625248edaaf11c32135eba7da8b
+      "11.5.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.5.0-1/xpack-gcc-11.5.0-1-linux-x64.tar.gz
+        sha256: 9c0c2c7d6c046dba991440b33bb07697a7cdc4a8d72aa5efb55d0906f8dba995
+      "11.4.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.4.0-2/xpack-gcc-11.4.0-2-linux-x64.tar.gz
+        sha256: 986e55f5558f12d3e6584ff44c24f14c982aa259086c71ef35a0fed4d98d364b
+      "11.4.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.4.0-1/xpack-gcc-11.4.0-1-linux-x64.tar.gz
+        sha256: cd65a65f65e10f7a890a889768984be8af96c699b73a32eca2c7cdba6b4b73a5
+      "11.3.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.3.0-1/xpack-gcc-11.3.0-1-linux-x64.tar.gz
+        sha256: b2763af8550341fbeb63f822793d5458f7b5135fbbe1860e017d8bac465f4188
+      "11.2.0-3":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.2.0-3/xpack-gcc-11.2.0-3-linux-x64.tar.gz
+        sha256: 3f6b532904367a8c9f41dd926e620a83fc81fc4246c48e24c8a49223fe6c6e63
+      "11.2.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.2.0-1/xpack-gcc-11.2.0-1-linux-x64.tar.gz
+        sha256: 09bc1a8d8d887062a1d1d4668cc21ffa9f5f839a1fff5b29afe40a67bbfb0c5f
+      "8.5.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v8.5.0-1/xpack-gcc-8.5.0-1-linux-x64.tar.gz
+        sha256: ef74a7b554e586f84ce5d17bb6d2074f4ab59e07da3038029f04f8a2fa657cc5
+
+espressif:
+
+  xtensa-esp-elf:
+    description: Xtensa bare-metal for ESP32/ESP32-S2/S3
+    versions:
+      "16.1.0_20260609":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.1.0_20260609/xtensa-esp-elf-16.1.0_20260609-x86_64-linux-gnu.tar.xz
+        sha256: f708752ebb35cab21f184b2574114ed1187619db0edb8a4ba913c06ca2fa675e
+      "15.2.0_20251204":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-15.2.0_20251204/xtensa-esp-elf-15.2.0_20251204-x86_64-linux-gnu.tar.xz
+        sha256: 3d50f5cd5f173acfd524e07c1cd69bc99585731a415ca2e5bce879997fe602b8
+      "15.2.0_20251201":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-15.2.0_20251201/xtensa-esp-elf-15.2.0_20251201-x86_64-linux-gnu.tar.xz
+        sha256: 7db5f3d70955e71013dd56a6cec5cf34945686641dac16315f552d0b58ec8dec
+      "15.2.0_20251127":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-15.2.0_20251127/xtensa-esp-elf-15.2.0_20251127-x86_64-linux-gnu.tar.xz
+        sha256: d2a64efdd8c166dd26ec80a52cb9c3c858da56a2ac2c396926f774172edf4700
+      "15.2.0_20250929":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-15.2.0_20250929/xtensa-esp-elf-15.2.0_20250929-x86_64-linux-gnu.tar.xz
+        sha256: 178377e249346c232323cb94f052cdd0b83fcd581db2e2297e629e034243edcf
+      "15.2.0_20250920":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-15.2.0_20250920/xtensa-esp-elf-15.2.0_20250920-x86_64-linux-gnu.tar.xz
+        sha256: e3d77ad14544814527bbe7a2d0f79ec4592a4e23392c51c7388c0e686b6a6977
+      "15.1.0_20250607":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-15.1.0_20250607/xtensa-esp-elf-15.1.0_20250607-x86_64-linux-gnu.tar.xz
+        sha256: 45d60317d7a35414ce7fe4c900e636d90c4b0e16d85f2a5c03b523b4efadf3bb
+      "14.2.0_20260121":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20260121/xtensa-esp-elf-14.2.0_20260121-x86_64-linux-gnu.tar.xz
+        sha256: da31f36d79d4e99f24e55a90a71e65d5694714f16199960bf7885724b706a48c
+      "14.2.0_20251219":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251219/xtensa-esp-elf-14.2.0_20251219-x86_64-linux-gnu.tar.xz
+        sha256: d230e7de420892b2dad91338dfc71acbaeceb3b34d509e3c39c3b23bd23b265d
+      "14.2.0_20251208":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251208/xtensa-esp-elf-14.2.0_20251208-x86_64-linux-gnu.tar.xz
+        sha256: 041d42d3327bb4f28200896e65aa2e1a618b14bb79be0cd43b08a8b665c5f598
+      "14.2.0_20251107":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251107/xtensa-esp-elf-14.2.0_20251107-x86_64-linux-gnu.tar.xz
+        sha256: b0065b3b28d2b5d3bf4868f2fda6bc95d6081025583d1c17b286884bead0305d
+      "14.2.0_20251103":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251103/xtensa-esp-elf-14.2.0_20251103-x86_64-linux-gnu.tar.xz
+        sha256: 6e8f05c73575d7438660aedafca4abf17ec358291da0e43d513a99d747508771
+      "14.2.0_20251024":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251024/xtensa-esp-elf-14.2.0_20251024-x86_64-linux-gnu.tar.xz
+        sha256: a26fdfe62460c7f84daeb095e3bea40d805e406c969cacc9b7220fef3f2f8573
+      "14.2.0_20250730":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20250730/xtensa-esp-elf-14.2.0_20250730-x86_64-linux-gnu.tar.xz
+        sha256: 4fd6d2517f55161056b735cc53c7ccfa59c30a574a0f4decfad77cae4ca5f711
+      "14.2.0_20241119":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20241119/xtensa-esp-elf-14.2.0_20241119-x86_64-linux-gnu.tar.xz
+        sha256: e3e6dcf3d275c3c9ab0e4c8a9d93fd10e7efc035d435460576c9d95b4140c676
+      "14.2.0_20240906":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20240906/xtensa-esp-elf-14.2.0_20240906-x86_64-linux-gnu.tar.xz
+        sha256: e7c01501d5e32d317c3fadb9d97d1988b586c6e051c6d75a3bbcef3357ce1a51
+      "13.2.0_20260203":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-13.2.0_20260203/xtensa-esp-elf-13.2.0_20260203-x86_64-linux-gnu.tar.xz
+        sha256: 382eb2cab35297f732cd67223df67e9235f3957f98e667c33621f02285a4dc5d
+      "13.2.0_20250707":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-13.2.0_20250707/xtensa-esp-elf-13.2.0_20250707-x86_64-linux-gnu.tar.xz
+        sha256: d1f1378394baa3788bf78062e5d041cb14d4858bbb57f86d59e5b83fc9d5525f
+      "13.2.0_20240530":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-13.2.0_20240530/xtensa-esp-elf-13.2.0_20240530-x86_64-linux-gnu.tar.xz
+        sha256: fcef03d87eac44c0dbee2bbee98443ed2fcf82720dcd8ebfe00640807b0f07c2
+      "13.2.0_20240305":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-13.2.0_20240305/xtensa-esp-elf-13.2.0_20240305-x86_64-linux-gnu.tar.xz
+        sha256: 4e43e56cd533a39c6b0ccc8b30320b19ce66b0b17e646b53fa84c9bf956b2c83
+      "13.2.0_20230928":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-13.2.0_20230928/xtensa-esp-elf-13.2.0_20230928-x86_64-linux-gnu.tar.xz
+        sha256: bae7da23ea8516fb7e42640f4420c4dd1ebfd64189a14fc330d73e173b3a038b
+
+  riscv32-esp-elf:
+    description: RISC-V bare-metal for ESP32-C/H series
+    versions:
+      "16.1.0_20260609":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.1.0_20260609/riscv32-esp-elf-16.1.0_20260609-x86_64-linux-gnu.tar.xz
+        sha256: 0b029ab31ebc7f74e2c4779077251b21a22cd620669dc4c82e7adc478d403a8d
+      "15.2.0_20251204":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-15.2.0_20251204/riscv32-esp-elf-15.2.0_20251204-x86_64-linux-gnu.tar.xz
+        sha256: ace5aae6afe98f754947be043d40173e2e22ace57754b11a394b7238eefa01cf
+      "15.2.0_20251201":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-15.2.0_20251201/riscv32-esp-elf-15.2.0_20251201-x86_64-linux-gnu.tar.xz
+        sha256: f56784438bbb09e038932384c7227000e1ff3add77e8da40c9fe49e0fd5faed5
+      "15.2.0_20251127":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-15.2.0_20251127/riscv32-esp-elf-15.2.0_20251127-x86_64-linux-gnu.tar.xz
+        sha256: 44cf4708ceb33816e6b28571b48478d0fdea7ded3ca5efff2a155249e370f370
+      "15.2.0_20250929":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-15.2.0_20250929/riscv32-esp-elf-15.2.0_20250929-x86_64-linux-gnu.tar.xz
+        sha256: 516abd1c8e9646d8b846f180d7c06d95494822df93aa967e097c6591f6e4d4d6
+      "15.2.0_20250920":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-15.2.0_20250920/riscv32-esp-elf-15.2.0_20250920-x86_64-linux-gnu.tar.xz
+        sha256: c5a84940f2fe5016768faa4d644507259e61e35883e8bacdb803b3f1dae99cff
+      "15.1.0_20250607":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-15.1.0_20250607/riscv32-esp-elf-15.1.0_20250607-x86_64-linux-gnu.tar.xz
+        sha256: 9bfe9b4fe08bd07614d085482301f5206a15a075ce4e9cf1c9c3d9d3e0d6b110
+      "14.2.0_20260121":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20260121/riscv32-esp-elf-14.2.0_20260121-x86_64-linux-gnu.tar.xz
+        sha256: b3fce4b04dd15a9f0ed1c209b5a2f389c04eff92ed85e4cc0ebc275b7d95e95a
+      "14.2.0_20251219":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251219/riscv32-esp-elf-14.2.0_20251219-x86_64-linux-gnu.tar.xz
+        sha256: 508462cf742d344634059278b39283ed1c43549fd1fe2ce246064458072c02cd
+      "14.2.0_20251208":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251208/riscv32-esp-elf-14.2.0_20251208-x86_64-linux-gnu.tar.xz
+        sha256: c0aee981f159a00cd33d4dd03a8b8e1d0c486f27815314c5c77f66aa92e703e9
+      "14.2.0_20251107":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251107/riscv32-esp-elf-14.2.0_20251107-x86_64-linux-gnu.tar.xz
+        sha256: 1d3a1b6a064686d9b77c4db7731f82e26c072e312e27969c45fe96410ecb2671
+      "14.2.0_20251103":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251103/riscv32-esp-elf-14.2.0_20251103-x86_64-linux-gnu.tar.xz
+        sha256: eb5cc04940711d2bb3263ce2bfee0495f25f149341db45e544d411834a0f8651
+      "14.2.0_20251024":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251024/riscv32-esp-elf-14.2.0_20251024-x86_64-linux-gnu.tar.xz
+        sha256: 71934880d977e6b5153c4355600272c033fac4462cb759f6ce59ed5f97c325b6
+      "14.2.0_20250730":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20250730/riscv32-esp-elf-14.2.0_20250730-x86_64-linux-gnu.tar.xz
+        sha256: 5c467d91a0ee58c2c08ce3950e00f512d93330fbc89d2a290fb37405fe805942
+      "14.2.0_20241119":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20241119/riscv32-esp-elf-14.2.0_20241119-x86_64-linux-gnu.tar.xz
+        sha256: 7faaa86d272f3e43c233f8a5ffeba327673224a752c2eb72394655d5e7950000
+      "14.2.0_20240906":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20240906/riscv32-esp-elf-14.2.0_20240906-x86_64-linux-gnu.tar.xz
+        sha256: c20b1ee91611622364146be5709decb03451af3f39fd1bce0636fc49d6391e3d
+      "13.2.0_20260203":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-13.2.0_20260203/riscv32-esp-elf-13.2.0_20260203-x86_64-linux-gnu.tar.xz
+        sha256: c7d4369080839e285c9f59b4d6ee346f72538b43384f310c7764204f5fcafa62
+      "13.2.0_20250707":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-13.2.0_20250707/riscv32-esp-elf-13.2.0_20250707-x86_64-linux-gnu.tar.xz
+        sha256: bd1ad6cdcee2d5de288c0c05b70f56f959dd270e2df254159594d0b05ad5dea1
+      "13.2.0_20240530":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-13.2.0_20240530/riscv32-esp-elf-13.2.0_20240530-x86_64-linux-gnu.tar.xz
+        sha256: f69a491d2f42f63e119f9077da995f7743ea8e1bf6944166a42a312cf60728a8
+      "13.2.0_20240305":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-13.2.0_20240305/riscv32-esp-elf-13.2.0_20240305-x86_64-linux-gnu.tar.xz
+        sha256: 2bd71171ddb801e59c85ecbea3b89d6f707627d6c11e501cae43ca7c0db73eda
+      "13.2.0_20230928":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-13.2.0_20230928/riscv32-esp-elf-13.2.0_20230928-x86_64-linux-gnu.tar.xz
+        sha256: 782feefe354500c5f968e8c91959651be3bdbbd7ae8a17affcee2b1bffcaad89
+
+zakkemble:
+
+  avr:
+    description: AVR microcontrollers (ATmega, ATtiny, etc.)
+    versions:
+      "15.2.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v15.2.0-1/avr-gcc-15.2.0-x64-linux.tar.bz2
+        sha256: 
+      "15.1.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v15.1.0-1/avr-gcc-15.1.0-x64-linux.tar.bz2
+        sha256: afedbf3643ca8f880b96ef9334511ce4ec3606ff3227744bc323565039a58203
+      "14.1.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v14.1.0-1/avr-gcc-14.1.0-x64-linux.tar.bz2
+        sha256: 4e9c6edf520765cdefa2d9af3304681296de24c3e095750e3be5504c12d3b224
+      "13.2.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v13.2.0-1/avr-gcc-13.2.0-x64-linux.tar.bz2
+        sha256: 79a3855a4bc36ffb1f7a4423e4cff7b9c18c7c96a1c90c7107b8bdaa70c28507
+      "12.1.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v12.1.0-1/avr-gcc-12.1.0-x64-linux.tar.bz2
+        sha256: feb034f4b85237032da8bac1f03765af5ebc4a8939b69bed57ff31bc482ca1a6
+      "11.1.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v11.1.0-1/avr-gcc-11.1.0-x64-linux.tar.bz2
+        sha256: 9ebf16ab4e9c52c0b21d15df6bd97080cc4d1f5c0327c5b5b69955f3ee1bfd61
+      "10.1.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v10.1.0-1/avr-gcc-10.1.0-x64-linux.tar.bz2
+        sha256: 
+      "9.2.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v9.2.0-1/avr-gcc-9.2.0-x64-linux.tar.bz2
+        sha256: 
+      "9.1.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v9.1.0-1/avr-gcc-9.1.0-x64-linux.tar.bz2
+        sha256: 
+      "8.3.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v8.3.0-1/avr-gcc-8.3.0-x64-linux.tar.bz2
+        sha256: 
+      "8.2.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v8.2.0-1/avr-gcc-8.2.0-x64-linux.tar.bz2
+        sha256: 
+      "8.1.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v8.1.0-1/avr-gcc-8.1.0-x64-linux.tar.bz2
+        sha256: 
+      "7.3.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v7.3.0-1/avr-gcc-7.3.0-x64-linux.tar.bz2
+        sha256: 

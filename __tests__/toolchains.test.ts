@@ -1,0 +1,86 @@
+import { describe, it, expect } from "@jest/globals";
+import * as path from "path";
+import { resolveToolchain } from "../src/toolchains";
+
+const REPO_ROOT = path.join(__dirname, "..");
+
+describe("resolveToolchain", () => {
+  it("resolves arm-none-eabi on linux-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "15.2.1-1.1", "linux-x64");
+    expect(entry.url).toContain("arm-none-eabi");
+    expect(entry.url).toContain("15.2.1-1.1");
+    expect(entry.url).toContain("linux-x64");
+    expect(entry.sha256).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("resolves arm-none-eabi on linux-arm64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "15.2.1-1.1", "linux-arm64");
+    expect(entry.url).toContain("linux-arm64");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves arm-none-eabi on windows-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "15.2.1-1.1", "windows-x64");
+    expect(entry.url).toContain("win32-x64");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves aarch64-none-elf on linux-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "aarch64-none-elf", "14.2.1-1.1", "linux-x64");
+    expect(entry.url).toContain("aarch64-none-elf");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves xpack x86_64-gcc on linux-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "x86_64-gcc", "15.2.0-1", "linux-x64");
+    expect(entry.url).toContain("gcc-xpack");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves xpack x86_64-gcc on windows-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "x86_64-gcc", "15.2.0-1", "windows-x64");
+    expect(entry.url).toContain("win32-x64");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves winlibs x86_64-w64-mingw32-ucrt on windows-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "x86_64-w64-mingw32-ucrt", "16.1.0", "windows-x64");
+    expect(entry.url).toContain("winlibs");
+    expect(entry.url).toContain("ucrt");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves latest version when version=latest", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "latest", "linux-x64");
+    expect(entry.url).toBeTruthy();
+  });
+
+  it("resolves avr on linux-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "avr", "14.1.0", "linux-x64");
+    expect(entry.url).toBeTruthy();
+  });
+
+  it("throws for unsupported platform", () => {
+    expect(() =>
+      resolveToolchain(REPO_ROOT, "arm-none-eabi", "latest", "windows-arm64" as any)
+    ).toThrow(/No toolchain database available/);
+  });
+
+  it("throws for unknown toolchain with helpful message", () => {
+    expect(() =>
+      resolveToolchain(REPO_ROOT, "nonexistent-gcc", "1.0.0", "linux-x64")
+    ).toThrow(/Available:/);
+  });
+
+  it("throws for unknown version with available versions list", () => {
+    expect(() =>
+      resolveToolchain(REPO_ROOT, "arm-none-eabi", "0.0.1", "linux-x64")
+    ).toThrow(/Available versions:/);
+  });
+
+  it("xtensa-esp-elf not available on windows-x64", () => {
+    expect(() =>
+      resolveToolchain(REPO_ROOT, "xtensa-esp-elf", "latest", "windows-x64")
+    ).toThrow(/not found/);
+  });
+});

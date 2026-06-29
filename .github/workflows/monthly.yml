@@ -1,0 +1,216 @@
+name: Monthly
+
+on:
+  schedule:
+    - cron: "0 4 1 * *"  # 04:00 UTC on the 1st of every month
+  workflow_dispatch:
+
+# Test every toolchain at every version across all supported platforms.
+# This catches regressions in older versions and validates the full database.
+
+jobs:
+  matrix-linux-x64:
+    name: ${{ matrix.toolchain }} ${{ matrix.version }} (linux-x64)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        include:
+          # arm-none-eabi — spot-check: latest + oldest + two in between
+          - { toolchain: arm-none-eabi,   version: "15.2.1-1.1", binary: arm-none-eabi-gcc }
+          - { toolchain: arm-none-eabi,   version: "13.3.1-1.1", binary: arm-none-eabi-gcc }
+          - { toolchain: arm-none-eabi,   version: "12.3.1-1.1", binary: arm-none-eabi-gcc }
+          - { toolchain: arm-none-eabi,   version: "11.2.1-1.1", binary: arm-none-eabi-gcc }
+          # aarch64-none-elf
+          - { toolchain: aarch64-none-elf, version: "15.2.1-1.1", binary: aarch64-none-elf-gcc }
+          - { toolchain: aarch64-none-elf, version: "12.3.1-1.1", binary: aarch64-none-elf-gcc }
+          - { toolchain: aarch64-none-elf, version: "11.2.1-1.1", binary: aarch64-none-elf-gcc }
+          # riscv-none-elf
+          - { toolchain: riscv-none-elf,   version: "15.2.1-1.1", binary: riscv-none-elf-gcc }
+          - { toolchain: riscv-none-elf,   version: "13.2.1-1.1", binary: riscv-none-elf-gcc }
+          - { toolchain: riscv-none-elf,   version: "11.3.1-1.1", binary: riscv-none-elf-gcc }
+          # x86_64-gcc
+          - { toolchain: x86_64-gcc,       version: "15.2.0-1",   binary: gcc }
+          - { toolchain: x86_64-gcc,       version: "13.3.0-2",   binary: gcc }
+          - { toolchain: x86_64-gcc,       version: "11.4.0-2",   binary: gcc }
+          # espressif
+          - { toolchain: xtensa-esp-elf,   version: "16.1.0_20260609", binary: xtensa-esp-elf-gcc }
+          - { toolchain: xtensa-esp-elf,   version: "14.2.0_20241119", binary: xtensa-esp-elf-gcc }
+          - { toolchain: riscv32-esp-elf,  version: "16.1.0_20260609", binary: riscv32-esp-elf-gcc }
+          - { toolchain: riscv32-esp-elf,  version: "14.2.0_20241119", binary: riscv32-esp-elf-gcc }
+          # avr (only versions with known sha256)
+          - { toolchain: avr,              version: "14.1.0", binary: avr-gcc }
+          - { toolchain: avr,              version: "12.1.0", binary: avr-gcc }
+          - { toolchain: avr,              version: "11.1.0", binary: avr-gcc }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup ${{ matrix.toolchain }} ${{ matrix.version }}
+        uses: ./
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          version: ${{ matrix.version }}
+          enable-cache: false
+
+      - name: Verify binary
+        run: |
+          which ${{ matrix.binary }}
+          ${{ matrix.binary }} --version
+          first=$(which ${{ matrix.binary }})
+          if [[ "$first" != "$RUNNER_TEMP"* ]]; then
+            echo "ERROR: expected binary under RUNNER_TEMP, got $first"
+            exit 1
+          fi
+
+  matrix-linux-arm64:
+    name: ${{ matrix.toolchain }} ${{ matrix.version }} (linux-arm64)
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        include:
+          - { toolchain: arm-none-eabi,    version: "15.2.1-1.1", binary: arm-none-eabi-gcc }
+          - { toolchain: arm-none-eabi,    version: "12.3.1-1.1", binary: arm-none-eabi-gcc }
+          - { toolchain: aarch64-none-elf, version: "15.2.1-1.1", binary: aarch64-none-elf-gcc }
+          - { toolchain: riscv-none-elf,   version: "15.2.1-1.1", binary: riscv-none-elf-gcc }
+          - { toolchain: x86_64-gcc,       version: "15.2.0-1",   binary: gcc }
+          - { toolchain: xtensa-esp-elf,   version: "16.1.0_20260609", binary: xtensa-esp-elf-gcc }
+          - { toolchain: riscv32-esp-elf,  version: "16.1.0_20260609", binary: riscv32-esp-elf-gcc }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup ${{ matrix.toolchain }} ${{ matrix.version }}
+        uses: ./
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          version: ${{ matrix.version }}
+          enable-cache: false
+
+      - name: Verify binary
+        run: |
+          which ${{ matrix.binary }}
+          ${{ matrix.binary }} --version
+          first=$(which ${{ matrix.binary }})
+          if [[ "$first" != "$RUNNER_TEMP"* ]]; then
+            echo "ERROR: expected binary under RUNNER_TEMP, got $first"
+            exit 1
+          fi
+
+  matrix-windows:
+    name: ${{ matrix.toolchain }} ${{ matrix.version }} (windows)
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        include:
+          - { toolchain: arm-none-eabi,             version: "15.2.1-1.1", binary: arm-none-eabi-gcc }
+          - { toolchain: arm-none-eabi,             version: "12.3.1-1.1", binary: arm-none-eabi-gcc }
+          - { toolchain: aarch64-none-elf,          version: "15.2.1-1.1", binary: aarch64-none-elf-gcc }
+          - { toolchain: riscv-none-elf,            version: "15.2.1-1.1", binary: riscv-none-elf-gcc }
+          - { toolchain: x86_64-gcc,                version: "15.2.0-1",   binary: gcc }
+          - { toolchain: avr,                       version: "14.1.0",     binary: avr-gcc }
+          - { toolchain: x86_64-w64-mingw32-ucrt,   version: "16.1.0",     binary: x86_64-w64-mingw32-gcc }
+          - { toolchain: x86_64-w64-mingw32-ucrt,   version: "13.2.0",     binary: x86_64-w64-mingw32-gcc }
+          - { toolchain: x86_64-w64-mingw32-msvcrt, version: "16.1.0",     binary: x86_64-w64-mingw32-gcc }
+          - { toolchain: i686-w64-mingw32-ucrt,     version: "16.1.0",     binary: i686-w64-mingw32-gcc }
+          - { toolchain: i686-w64-mingw32-msvcrt,   version: "16.1.0",     binary: i686-w64-mingw32-gcc }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup ${{ matrix.toolchain }} ${{ matrix.version }}
+        uses: ./
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          version: ${{ matrix.version }}
+          enable-cache: false
+
+      - name: Verify binary
+        run: |
+          $bin = (Get-Command ${{ matrix.binary }}).Source
+          Write-Host "Found at: $bin"
+          & ${{ matrix.binary }} --version
+          if (-not $bin.StartsWith($env:RUNNER_TEMP)) {
+            Write-Error "Expected binary under RUNNER_TEMP, got $bin"
+            exit 1
+          }
+        shell: pwsh
+
+  cache-roundtrip:
+    name: Cache roundtrip — ${{ matrix.toolchain }} (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-latest,  toolchain: arm-none-eabi, version: "15.2.1-1.1", binary: arm-none-eabi-gcc }
+          - { runner: windows-latest, toolchain: arm-none-eabi, version: "15.2.1-1.1", binary: arm-none-eabi-gcc }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: First install (populates cache)
+        id: first
+        uses: ./
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          version: ${{ matrix.version }}
+          enable-cache: true
+
+      - name: Verify cache-hit is false on first run
+        run: |
+          echo "cache-hit=${{ steps.first.outputs.cache-hit }}"
+          if [ "${{ steps.first.outputs.cache-hit }}" = "true" ]; then
+            echo "WARNING: unexpected cache hit on first install (stale cache from previous run)"
+          fi
+        shell: bash
+
+      - name: Second install (should hit cache)
+        id: second
+        uses: ./
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          version: ${{ matrix.version }}
+          enable-cache: true
+
+      - name: Verify cache-hit is true on second run
+        run: |
+          echo "cache-hit=${{ steps.second.outputs.cache-hit }}"
+          if [ "${{ steps.second.outputs.cache-hit }}" != "true" ]; then
+            echo "ERROR: expected cache hit on second install"
+            exit 1
+          fi
+        shell: bash
+
+      - name: Verify binary still works after cache restore
+        run: |
+          which ${{ matrix.binary }} || (Get-Command ${{ matrix.binary }}).Source
+          ${{ matrix.binary }} --version || & ${{ matrix.binary }} --version
+        shell: bash
+
+  notify-on-failure:
+    name: Notify on failure
+    runs-on: ubuntu-latest
+    needs: [matrix-linux-x64, matrix-linux-arm64, matrix-windows, cache-roundtrip]
+    if: failure()
+    steps:
+      - name: Create issue on failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `Weekly checks failed — ${new Date().toISOString().slice(0, 10)}`;
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'weekly-failure',
+            });
+            if (existing.data.some(i => i.title === title)) return;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body: `Weekly workflow failed: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              labels: ['weekly-failure'],
+            });

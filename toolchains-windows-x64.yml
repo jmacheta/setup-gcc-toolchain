@@ -1,0 +1,475 @@
+# GCC Toolchain Database — Windows x86_64 runner
+# Structure: vendor -> toolchain -> version -> {url, sha256}
+# Sources:
+#   xpack:      https://github.com/xpack-dev-tools
+#   espressif:  https://github.com/espressif/crosstool-NG
+#   zakkemble:  https://github.com/ZakKemble/avr-gcc-build
+#   winlibs:    https://github.com/brechtsanders/winlibs_mingw
+
+xpack:
+
+  arm-none-eabi:
+    description: ARM bare-metal (Cortex-M/R, no OS)
+    versions:
+      "15.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v15.2.1-1.1/xpack-arm-none-eabi-gcc-15.2.1-1.1-win32-x64.zip
+        sha256: bae6a3d1667697ce750c3b13d6d26d80973ecedc2cc87bf04869e83447fd93ea
+      "14.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v14.2.1-1.1/xpack-arm-none-eabi-gcc-14.2.1-1.1-win32-x64.zip
+        sha256: 0b2d496b383ba578182eb57b3f7d35ff510e36eda56257883b902fa07c3bba55
+      "13.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v13.3.1-1.1/xpack-arm-none-eabi-gcc-13.3.1-1.1-win32-x64.zip
+        sha256: 49cda1bf01215f3df0613972d21f9fec3eb79dca82506365e7da2ff74b921733
+      "13.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v13.2.1-1.1/xpack-arm-none-eabi-gcc-13.2.1-1.1-win32-x64.zip
+        sha256: 56b18ccb0a50f536332ec5de57799342ff0cd005ca2c54288c74759b51929e4f
+      "12.3.1-1.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v12.3.1-1.2/xpack-arm-none-eabi-gcc-12.3.1-1.2-win32-x64.zip
+        sha256: cb5e2be31fcfc7c78390041efc5602f22266f21ed968443827898fa4c47c6f20
+      "12.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v12.3.1-1.1/xpack-arm-none-eabi-gcc-12.3.1-1.1-win32-x64.zip
+        sha256: dcd941678c49b780869db94d5ad3f036b1f18003b968b8ab62af04648b265e92
+      "12.2.1-1.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v12.2.1-1.2/xpack-arm-none-eabi-gcc-12.2.1-1.2-win32-x64.zip
+        sha256: 5662a2d95bd5b28d24797709864fa8e1379a3bd103112f3c96a6c16db1e2e44a
+      "12.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v12.2.1-1.1/xpack-arm-none-eabi-gcc-12.2.1-1.1-win32-x64.zip
+        sha256: 9d9d187d7ba587d1efd014180d12f4bc9d6d65225c24425a9334d08312e1fd2b
+      "11.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v11.3.1-1.1/xpack-arm-none-eabi-gcc-11.3.1-1.1-win32-x64.zip
+        sha256: d3906baa7a845bb8f341b67da8185e48fb9dc2746963bf40c2caea825c73ee5c
+      "11.2.1-1.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v11.2.1-1.2/xpack-arm-none-eabi-gcc-11.2.1-1.2-win32-x64.zip
+        sha256: 4a45e1df1c621f0a97a2bcb63977a3745ffcff7afc0e31ad2f3d5cc1272acf4b
+      "11.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v11.2.1-1.1/xpack-arm-none-eabi-gcc-11.2.1-1.1-win32-x64.zip
+        sha256: a9327ff3a764a2cabfe385921f02d90e9e424d2c8fb504a3600e598fcea99e7c
+      "10.3.1-2.3":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v10.3.1-2.3/xpack-arm-none-eabi-gcc-10.3.1-2.3-win32-x64.zip
+        sha256: 169744f784fb04ae10c60bc6a2cd69cff93cff0bf5657e9333776036f347f9c4
+      "10.3.1-2.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v10.3.1-2.2/xpack-arm-none-eabi-gcc-10.3.1-2.2-win32-x64.zip
+        sha256: 906424e6d9e3c3482b1f466635151e067419b58f7e1814f537478cc2001b82e3
+      "10.3.1-2.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v10.3.1-2.1/xpack-arm-none-eabi-gcc-10.3.1-2.1-win32-x64.zip
+        sha256: 17c78c88efba6b6f3988b216044db908570af70392977c7a4680a5f08e098b61
+      "10.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v10.2.1-1.1/xpack-arm-none-eabi-gcc-10.2.1-1.1-win32-x64.zip
+        sha256: adfd5e940f3cb27589e7ea06d41291559fe37d74a475922eb80b7d34e1810968
+      "9.3.1-1.4":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v9.3.1-1.4/xpack-arm-none-eabi-gcc-9.3.1-1.4-win32-x64.zip
+        sha256: ed886282a17378996b84e553d40dd2029c76b428e4ce8bca45d15a098bc32125
+      "9.3.1-1.3":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v9.3.1-1.3/xpack-arm-none-eabi-gcc-9.3.1-1.3-win32-x64.zip
+        sha256: bb2370eb70678cec6d6251d2fad2570539bd2e1884e181e350c2e124ec2dcfdf
+      "9.3.1-1.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v9.3.1-1.2/xpack-arm-none-eabi-gcc-9.3.1-1.2-win32-x64.zip
+        sha256: ad9e7a9c0e64a7ebc38b431876dc4998f655a4385e56b7283a11ef1a5247567d
+      "9.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v9.3.1-1.1/xpack-arm-none-eabi-gcc-9.3.1-1.1-win32-x64.zip
+        sha256: 91ab5e1b9b3ffcc606262e2be96bd70ab0be26a42d21e610340412f65de2bb16
+      "9.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v9.2.1-1.1/xpack-arm-none-eabi-gcc-9.2.1-1.1-win32-x64.zip
+        sha256: 923bf50198cb155361a95fcac8804d12acd64e963a89f352c69fe24bf54ff0ef
+      "8.3.1-1.4":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v8.3.1-1.4/xpack-arm-none-eabi-gcc-8.3.1-1.4-win32-x64.zip
+        sha256: 2f415819d96a50eb8f75974718e57762d1476a9f9722f4661e43b034fffe1a27
+      "8.3.1-1.3":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v8.3.1-1.3/xpack-arm-none-eabi-gcc-8.3.1-1.3-win32-x64.zip
+        sha256: fbc999128bfbf0daac36fbbc8d099db9688cb2aee89632b290ad8053d6997f97
+      "8.3.1-1.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v8.3.1-1.2/xpack-arm-none-eabi-gcc-8.3.1-1.2-win32-x64.zip
+        sha256: 5d89caf249c7f048b6549bf1a6f88d2736aacfa5e23eaa16a03fd32ab87ffbdf
+      "8.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v8.3.1-1.1/xpack-arm-none-eabi-gcc-8.3.1-1.1-win32-x64.zip
+        sha256: 39e1e553edcae83856882b8587a7f8b6d5c9f8fc11f10247b0e2af3321481fdb
+      "7.3.1-1.2":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v7.3.1-1.2/xpack-arm-none-eabi-gcc-7.3.1-1.2-win32-x64.zip
+        sha256: b5501d197ba19724783e42a454c260f9a73ab9a759279aea72bf353dd5301afc
+
+  aarch64-none-elf:
+    description: AArch64 bare-metal (no OS)
+    versions:
+      "15.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v15.2.1-1.1/xpack-aarch64-none-elf-gcc-15.2.1-1.1-win32-x64.zip
+        sha256: eeea8fe159fdcaaea8d5abe6cc66f2c81659c3011164d6a20b76920a5abcecf3
+      "14.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v14.2.1-1.1/xpack-aarch64-none-elf-gcc-14.2.1-1.1-win32-x64.zip
+        sha256: 1d8655120cb73a9bfbb7eb65f1b5e2d114d6f99ce5a0e107b73d646b55a6306a
+      "13.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v13.3.1-1.1/xpack-aarch64-none-elf-gcc-13.3.1-1.1-win32-x64.zip
+        sha256: 47455ae3edd32924ce9a45bac5736bbcdd17161dd7288b61005d6fa5cdfb3952
+      "13.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v13.2.1-1.1/xpack-aarch64-none-elf-gcc-13.2.1-1.1-win32-x64.zip
+        sha256: 6fb15fcccb4c038b8e0586a03484b58ce63f443cd9c5319b2377063bb665cf98
+      "12.3.1-2.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v12.3.1-2.1/xpack-aarch64-none-elf-gcc-12.3.1-2.1-win32-x64.zip
+        sha256: 41f87244a8c14a88d4926f20fee7e1087ba3ac7e128870a873e8bfa9e820ce92
+      "12.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v12.3.1-1.1/xpack-aarch64-none-elf-gcc-12.3.1-1.1-win32-x64.zip
+        sha256: 934d4ac5372198f281286d73467725bfdcbc61bac2ce3f91117dfc03a673e629
+      "12.2.1-1.2":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v12.2.1-1.2/xpack-aarch64-none-elf-gcc-12.2.1-1.2-win32-x64.zip
+        sha256: 6a236ead2d161e9bc4dfb0294272d07f1e0473467033bb022be34c7ad4d45680
+      "12.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v12.2.1-1.1/xpack-aarch64-none-elf-gcc-12.2.1-1.1-win32-x64.zip
+        sha256: 179d7da383ed043930f6a03a24e56c9599565cb292063dba39b85db49c9d55a3
+      "11.3.1-1.2":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v11.3.1-1.2/xpack-aarch64-none-elf-gcc-11.3.1-1.2-win32-x64.zip
+        sha256: bc742a197f2e04ec0735bfad82ce9f742f7fa59ccee48b7058ad33c024013631
+      "11.3.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v11.3.1-1.1/xpack-aarch64-none-elf-gcc-11.3.1-1.1-win32-x64.zip
+        sha256: c63dbea1fcd6a303fde1359e51d1819064a47ac2a3ed7cd353b554a22f3ab310
+      "11.2.1-1.2":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v11.2.1-1.2/xpack-aarch64-none-elf-gcc-11.2.1-1.2-win32-x64.zip
+        sha256: 78deba2be085002cb31c80591792264e250aee9ae6d4d996871679781db16706
+      "11.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v11.2.1-1.1/xpack-aarch64-none-elf-gcc-11.2.1-1.1-win32-x64.zip
+        sha256: e5c5bb40fc8820a45ebd359e61e82a98b6d0c136e24628b2cba668261a9d8683
+
+  riscv-none-elf:
+    description: RISC-V bare-metal (RV32/RV64, no OS)
+    versions:
+      "15.2.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v15.2.0-1/xpack-riscv-none-elf-gcc-15.2.0-1-win32-x64.zip
+        sha256: 85ef714dacd273b1dadf4af4892774520ac01915bfa6da816a56e7e41591e09e
+      "14.3.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v14.3.0-1/xpack-riscv-none-elf-gcc-14.3.0-1-win32-x64.zip
+        sha256: 44749ebaac273114f6689360d6e1a10b7e0debe9cee7cbc24e83ef84b0c21cc5
+      "14.2.0-3":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v14.2.0-3/xpack-riscv-none-elf-gcc-14.2.0-3-win32-x64.zip
+        sha256: 9bb15efdeca256532c4a83ce6462c7dc1f9cfebe1f1f43d581b2ad7d077209b6
+      "14.2.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v14.2.0-2/xpack-riscv-none-elf-gcc-14.2.0-2-win32-x64.zip
+        sha256: 30f44bbea58954c1679528a0ebba6cc117671f78412267f85dcee4cdc029c477
+      "14.2.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v14.2.0-1/xpack-riscv-none-elf-gcc-14.2.0-1-win32-x64.zip
+        sha256: 183d602dc1eb7de43eb43ac43afef492f02b665c26418733ca5bca959c1ee5c3
+      "14.1.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v14.1.0-1/xpack-riscv-none-elf-gcc-14.1.0-1-win32-x64.zip
+        sha256: 3acfcef274c01cf20557a60562125089aa1a5384f49407904d67bd85cd263d75
+      "13.4.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.4.0-1/xpack-riscv-none-elf-gcc-13.4.0-1-win32-x64.zip
+        sha256: 6246ee0dd83215c0eef2d348c16b4270dcdf876705c81f3848c853c7b3a735b4
+      "13.3.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.3.0-2/xpack-riscv-none-elf-gcc-13.3.0-2-win32-x64.zip
+        sha256: b7df63b3351285fac81475e07f14ff80fd26c10db42d429a4798573862b48884
+      "13.3.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.3.0-1/xpack-riscv-none-elf-gcc-13.3.0-1-win32-x64.zip
+        sha256: 6e8549a9340c7722a7031959c9ff63bab353e1860b42c433ed05a0b55189a72b
+      "13.2.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.2.0-2/xpack-riscv-none-elf-gcc-13.2.0-2-win32-x64.zip
+        sha256: 28ce9f0cfa09f8d4c638a59fb4e17e3f61c80c47e46f11b2ba505a2a3db602f8
+      "13.2.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v13.2.0-1/xpack-riscv-none-elf-gcc-13.2.0-1-win32-x64.zip
+        sha256: 9e952f2a6b4c423f3df208391c836c7ff67ffee8df7aae6ca8efc59110bd14b7
+      "12.5.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.5.0-1/xpack-riscv-none-elf-gcc-12.5.0-1-win32-x64.zip
+        sha256: e23444e1058bac566f1f19f08fc27c06e3281aa5adc01586b197202fc3e6522b
+      "12.4.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.4.0-2/xpack-riscv-none-elf-gcc-12.4.0-2-win32-x64.zip
+        sha256: 7f218862cba503f8b3708358d2c95272c20bc71d25855609218ce8f01931fe75
+      "12.4.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.4.0-1/xpack-riscv-none-elf-gcc-12.4.0-1-win32-x64.zip
+        sha256: dba77e624400addfa49c649c235d6c074d82e34218f9c1aad4bb7807c3c8aeaf
+      "12.3.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.3.0-2/xpack-riscv-none-elf-gcc-12.3.0-2-win32-x64.zip
+        sha256: 87e851ebda6a179e988a33b58593c00e13f6edc55c3c73f913d28f10ab983653
+      "12.3.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.3.0-1/xpack-riscv-none-elf-gcc-12.3.0-1-win32-x64.zip
+        sha256: 58f3274a990815b87a29e64560dc57c192f9a45b1effc1106f607a50b7f6ccf0
+      "12.2.0-3":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.2.0-3/xpack-riscv-none-elf-gcc-12.2.0-3-win32-x64.zip
+        sha256: ced0ba39ed89048f176c9c93174b170443d2dbe669e9a6ddb92c3cfde689578e
+      "12.2.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.2.0-2/xpack-riscv-none-elf-gcc-12.2.0-2-win32-x64.zip
+        sha256: 31d94eeb94829a8c3044a5b37436c08a9db8ea2dbdb38e1b3f62c93f5f94a60a
+      "12.2.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.2.0-1/xpack-riscv-none-elf-gcc-12.2.0-1-win32-x64.zip
+        sha256: 1edf87d32975619076d3df558b8c1218daa54947f47b06c7ea9edb99e2290548
+      "12.1.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.1.0-2/xpack-riscv-none-elf-gcc-12.1.0-2-win32-x64.zip
+        sha256: ab2a596d00a4436192b80381b4b9bc1e6962de5699b4a494c4f476216963983d
+      "12.1.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v12.1.0-1/xpack-riscv-none-elf-gcc-12.1.0-1-win32-x64.zip
+        sha256: 7b79381242dbb3838e7f6a832dfd2628c7f6b36d9be793649ebaebad14cacbd9
+      "11.5.0-2":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v11.5.0-2/xpack-riscv-none-elf-gcc-11.5.0-2-win32-x64.zip
+        sha256: c39e7de669cc0ec10471a9dfb7f6724193c8eaedd69573de593e751283fb6118
+      "11.5.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v11.5.0-1/xpack-riscv-none-elf-gcc-11.5.0-1-win32-x64.zip
+        sha256: 533269c5c4f54966d6ff21f57525e11fd59c4d3bdea9b1911b38c6b159e64da8
+      "11.3.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v11.3.0-1/xpack-riscv-none-elf-gcc-11.3.0-1-win32-x64.zip
+        sha256: 56cc2e340bdcaa718862b3526a7c550605e699847a8903e471336ba0a4535c68
+
+  x86_64-gcc:
+    description: Native x86_64 GCC (no cross prefix)
+    versions:
+      "15.2.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v15.2.0-1/xpack-gcc-15.2.0-1-win32-x64.zip
+        sha256: be18e491c8da564f0b923d29ca0ffc8927f4a51c883d5827a8eb9c3d5386c5b0
+      "14.3.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v14.3.0-1/xpack-gcc-14.3.0-1-win32-x64.zip
+        sha256: 9a2a1abf360112cbd0dd53ca1670b756ab7dbfa1134c11cb5a7008bdc824fb82
+      "14.2.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v14.2.0-2/xpack-gcc-14.2.0-2-win32-x64.zip
+        sha256: d6a2589bf71fb0f8e6abd40834a92dd1dcbf6d508494f0c80f17ae0052685b61
+      "14.2.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v14.2.0-1/xpack-gcc-14.2.0-1-win32-x64.zip
+        sha256: 5c94de916ff50447f74f8d2bf13dd98b92f079f73ae064a02c47598c0109d5c8
+      "14.1.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v14.1.0-1/xpack-gcc-14.1.0-1-win32-x64.zip
+        sha256: f69f8a25835fe41b5647ea918a20e435fd23e9a96f95a15e85fe175b3076d02b
+      "13.4.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v13.4.0-1/xpack-gcc-13.4.0-1-win32-x64.zip
+        sha256: 406f16abb3683b0a69a54c5b48cf58d76851224cad1acf0c842a8dcd3df5259a
+      "13.3.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v13.3.0-2/xpack-gcc-13.3.0-2-win32-x64.zip
+        sha256: 9f31c74131fdd3be6f9eae334947c478a309e96f31b23412478558bd870f40ae
+      "13.3.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v13.3.0-1/xpack-gcc-13.3.0-1-win32-x64.zip
+        sha256: 9adf1c8c61276d688395ac825e72245f1a92d46dc89df683a5726c50f72a6cc2
+      "13.2.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v13.2.0-2/xpack-gcc-13.2.0-2-win32-x64.zip
+        sha256: e83b37dbc88c8d2db7046e8945b82ec74cd5087faefe6a3f5957e64a1de5e635
+      "13.2.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v13.2.0-1/xpack-gcc-13.2.0-1-win32-x64.zip
+        sha256: 12c6690dad5dfdc85f21878773e35eb31de610d16fc308e2af8c83c11985546e
+      "12.5.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.5.0-1/xpack-gcc-12.5.0-1-win32-x64.zip
+        sha256: 7a223780d31b9a14dfc62e50e403d75cc69e4f7b69de793e5911cdc2f8daa6de
+      "12.4.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.4.0-2/xpack-gcc-12.4.0-2-win32-x64.zip
+        sha256: 9490a26b97f856bd14028c6ffd3cffd87845ea2568f582ae36fead4a3e62d70c
+      "12.4.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.4.0-1/xpack-gcc-12.4.0-1-win32-x64.zip
+        sha256: 9dcadb924816706b92d737e7f934c75ae6cc3fb33d6080211b556b3479aacbec
+      "12.3.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.3.0-2/xpack-gcc-12.3.0-2-win32-x64.zip
+        sha256: 812b9c2068631f80be4e186d3cf7b6c8444ab87bea0ef1415ed21fe7dbbe1b71
+      "12.3.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.3.0-1/xpack-gcc-12.3.0-1-win32-x64.zip
+        sha256: b55250f49ef7652714d61d202e4b9f963594d555ed55c0bbeae18faf3a44d6b2
+      "12.2.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.2.0-2/xpack-gcc-12.2.0-2-win32-x64.zip
+        sha256: c53862f12cc3a7334638b33b6922b017574bb7f265abfdc3dfa476bcff775ce7
+      "12.2.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.2.0-1/xpack-gcc-12.2.0-1-win32-x64.zip
+        sha256: c41553ad4a3ac57e05a29a2ef67a3f6baf076745a8298f189ad55f2308747ab2
+      "12.1.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v12.1.0-1/xpack-gcc-12.1.0-1-win32-x64.zip
+        sha256: f98ea98e9b241219fa49b00930954809f569a4e858e12a7dc7334b227a80e7de
+      "11.5.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.5.0-2/xpack-gcc-11.5.0-2-win32-x64.zip
+        sha256: 5a94c9bf01c547fca24a1bd2f99d93e9970abf808997e154cba67d3e754322a0
+      "11.5.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.5.0-1/xpack-gcc-11.5.0-1-win32-x64.zip
+        sha256: 3f5f725722ee14932b01e53dc72f662eb59610302f2a0803d595f8ce41666fd8
+      "11.4.0-2":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.4.0-2/xpack-gcc-11.4.0-2-win32-x64.zip
+        sha256: 7b05a3633b3603ac45352da4c63a14474770335837944ca7b676c653be8eb9a3
+      "11.4.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.4.0-1/xpack-gcc-11.4.0-1-win32-x64.zip
+        sha256: 1398e576ef3ca2ffb56229c12045439db3a7c22465c071710ec8ad338d60c74d
+      "11.3.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.3.0-1/xpack-gcc-11.3.0-1-win32-x64.zip
+        sha256: 1336ea3a0544b3e51bc90e55fcf08c1b2553cb0745609bbd9b0f346a8f689a81
+      "11.2.0-3":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.2.0-3/xpack-gcc-11.2.0-3-win32-x64.zip
+        sha256: ff89f96a80ffa4cff25af526c009bc9ede63c8ba72d0c2df73d717fcfbe44689
+      "11.2.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.2.0-1/xpack-gcc-11.2.0-1-win32-x64.zip
+        sha256: b6b36762c98725e04c862ecbf26b3cb37bdfeb3c4c89d09f1c72bb3ff67176dc
+      "8.5.0-1":
+        url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v8.5.0-1/xpack-gcc-8.5.0-1-win32-x64.zip
+        sha256: 71c9a4744b207e080b7ab94e777b8a8f90018cccf1896fa650cbee2d91ac779c
+
+zakkemble:
+
+  avr:
+    description: AVR microcontrollers (ATmega, ATtiny, etc.)
+    versions:
+      "15.2.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v15.2.0-1/avr-gcc-15.2.0-x64-windows.zip
+        sha256: 
+      "15.1.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v15.1.0-1/avr-gcc-15.1.0-x64-windows.zip
+        sha256: ae931232ee4c8478476c91d75cf1fec49d68c7bd0ff0b03b20be98f60812c7d8
+      "14.1.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v14.1.0-1/avr-gcc-14.1.0-x64-windows.zip
+        sha256: d0efbf289004b2d700ae039aa0b592d7d34a9e797e8fe8aa1fef249e997bbae7
+      "13.2.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v13.2.0-1/avr-gcc-13.2.0-x64-windows.zip
+        sha256: e58964cee908a01c85855a4cc6db331d06a87b4451c32db2281e92268ba0f107
+      "12.1.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v12.1.0-1/avr-gcc-12.1.0-x64-windows.zip
+        sha256: e921a964fdeaedbe963352d0f26c6520a0a3eb8effc6ff232f3824b06c4ea0e2
+      "11.1.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v11.1.0-1/avr-gcc-11.1.0-x64-windows.zip
+        sha256: e11ec78125a11242cc45169d96bbff9f35b4b7b916711ff4fad64c62379a71f7
+      "10.1.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v10.1.0-1/avr-gcc-10.1.0-x64-windows.zip
+        sha256: 
+
+winlibs:
+
+  x86_64-w64-mingw32-ucrt:
+    description: MinGW-w64 x86_64, UCRT runtime (recommended)
+    versions:
+      "16.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.1.0posix-14.0.0-ucrt-r3/winlibs-x86_64-posix-seh-gcc-16.1.0-mingw-w64ucrt-14.0.0-r3.zip
+        sha256: 4273565109cd8ab8ecef1b0dc2a56fd7f5c7ee0885840a1c011b9325160ec0c3
+      "15.3.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/15.3.0posix-14.0.0-ucrt-r1/winlibs-x86_64-posix-seh-gcc-15.3.0-mingw-w64ucrt-14.0.0-r1.zip
+        sha256: ae31de2d5c1da830422b2b65384e3ad17f59c4daa8f11d9234e67090c32734e2
+      "15.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/15.2.0posix-14.0.0-ucrt-r7/winlibs-x86_64-posix-seh-gcc-15.2.0-mingw-w64ucrt-14.0.0-r7.zip
+        sha256: cb2fbad6162540cdf5e1facdce08d4dac359e8cf64f7f696a99274291763b815
+      "15.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/15.1.0posix-13.0.0-ucrt-r4/winlibs-x86_64-posix-seh-gcc-15.1.0-mingw-w64ucrt-13.0.0-r4.zip
+        sha256: 4ebc4119b570ae5a74f64227de955c128f74972ba0199f3714338f1d8e142548
+      "14.3.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.3.0posix-12.0.0-ucrt-r1/winlibs-x86_64-posix-seh-gcc-14.3.0-mingw-w64ucrt-12.0.0-r1.zip
+        sha256: d6e83bf3cfff02ddcb4ccb485a8a162e3852bf09976d0cb9d521f3d0d6855ea3
+      "14.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.2.0posix-12.0.0-ucrt-r3/winlibs-x86_64-posix-seh-gcc-14.2.0-llvm-19.1.7-mingw-w64ucrt-12.0.0-r3.zip
+        sha256: 982be78644b2fe40187e11b209333d58d3cf17be87d87be62a7bc24f18040594
+      "14.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.1.0posix-18.1.8-12.0.0-ucrt-r3/winlibs-x86_64-posix-seh-gcc-14.1.0-llvm-18.1.8-mingw-w64ucrt-12.0.0-r3.zip
+        sha256: 3e34596626f41f563d9d07cf86171ceed934d98d1c8b6d5dda8c15b52188e54e
+      "13.3.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/13.3.0posix-11.0.1-ucrt-r1/winlibs-x86_64-posix-seh-gcc-13.3.0-mingw-w64ucrt-11.0.1-r1.zip
+        sha256: 6c90485da4d9966683a83a1e5f3a0b1084d2a5ba2e57e8b27c0634afe3983776
+      "13.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/13.2.0posix-18.1.5-11.0.1-ucrt-r8/winlibs-x86_64-posix-seh-gcc-13.2.0-llvm-18.1.5-mingw-w64ucrt-11.0.1-r8.zip
+        sha256: 55065efa37f85eec983378ffebddf0ecbab465ebb75907c1f420727e39fb43f1
+      "13.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/13.1.0posix-16.0.3-11.0.0-ucrt-r1/winlibs-x86_64-posix-seh-gcc-13.1.0-llvm-16.0.3-mingw-w64ucrt-11.0.0-r1.zip
+        sha256: 1555bfd5a4e20e40ea8237a21ea2485db6ae8327504b98a40efec41aeb8ad2ba
+      "12.4.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/12.4.0posix-12.0.0-ucrt-r1/winlibs-x86_64-posix-seh-gcc-12.4.0-mingw-w64ucrt-12.0.0-r1.zip
+        sha256: 5f8c427e555c3dc93364b83a107aca914774eda213acf42fe16dcd45bac91ff2
+      "11.5.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/11.5.0posix-12.0.0-ucrt-r1/winlibs-x86_64-posix-seh-gcc-11.5.0-mingw-w64ucrt-12.0.0-r1.zip
+        sha256: cee970ee45be022e79f5b3409c41e0a37b3bf45f17c00343cb31ae7b2874e501
+
+  x86_64-w64-mingw32-msvcrt:
+    description: MinGW-w64 x86_64, legacy MSVCRT runtime
+    versions:
+      "16.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.1.0posix-14.0.0-msvcrt-r3/winlibs-x86_64-posix-seh-gcc-16.1.0-mingw-w64msvcrt-14.0.0-r3.zip
+        sha256: 38bceeff9d6f227e8a2fc0e5eb63a8b7e0f4b5cf2db8120e8e13862fdaaa2c87
+      "15.3.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/15.3.0posix-14.0.0-msvcrt-r1/winlibs-x86_64-posix-seh-gcc-15.3.0-mingw-w64msvcrt-14.0.0-r1.zip
+        sha256: 49153438a5abf3e395a41bae5a3c66159a83744cac412b520ae7cbd74d039bad
+      "15.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/15.2.0posix-14.0.0-msvcrt-r7/winlibs-x86_64-posix-seh-gcc-15.2.0-mingw-w64msvcrt-14.0.0-r7.zip
+        sha256: 9cd587d91ee7910dd8f9087e4bf9ac6b59a7ee594e1360601ba8a05355b9cefa
+      "15.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/15.1.0posix-13.0.0-msvcrt-r4/winlibs-x86_64-posix-seh-gcc-15.1.0-mingw-w64msvcrt-13.0.0-r4.zip
+        sha256: 491a2cffdb0086b35bce8cefdad0e1dcf9473a79e57ae8b7e90fa9d26cd218b2
+      "14.3.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.3.0posix-12.0.0-msvcrt-r1/winlibs-x86_64-posix-seh-gcc-14.3.0-mingw-w64msvcrt-12.0.0-r1.zip
+        sha256: fa091f1be38b8de5a3559e461afaa876449e11277dafce7c859c929a5c7e86ef
+      "14.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.2.0posix-19.1.7-12.0.0-msvcrt-r3/winlibs-x86_64-posix-seh-gcc-14.2.0-llvm-19.1.7-mingw-w64msvcrt-12.0.0-r3.zip
+        sha256: 5937a482247bebc2eca8c0b93fa43ddb17d94968adfff3f2e0c63c94608ee76b
+      "14.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.1.0posix-18.1.8-12.0.0-msvcrt-r3/winlibs-x86_64-posix-seh-gcc-14.1.0-llvm-18.1.8-mingw-w64msvcrt-12.0.0-r3.zip
+        sha256: 33910ec037a105597f56f31bfd5c74ef7cc0af5119a5c00701ff0a2e7f0aeae6
+      "13.3.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/13.3.0posix-11.0.1-msvcrt-r1/winlibs-x86_64-posix-seh-gcc-13.3.0-mingw-w64msvcrt-11.0.1-r1.zip
+        sha256: b3d9e374bf9f36328c731ee8d1ec4d4fe58921dcf14258da78ea525c1f9621b0
+      "13.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/13.2.0posix-18.1.5-11.0.1-msvcrt-r8/winlibs-x86_64-posix-seh-gcc-13.2.0-llvm-18.1.5-mingw-w64msvcrt-11.0.1-r8.zip
+        sha256: 4c355a28a04fffad1faa6146726fa63cca658d83257c519554397f7bc6d905e5
+      "13.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/13.1.0posix-16.0.3-11.0.0-msvcrt-r1/winlibs-x86_64-posix-seh-gcc-13.1.0-llvm-16.0.3-mingw-w64msvcrt-11.0.0-r1.zip
+        sha256: 546ee371caa4eaddeb99100834e5b378ed4c036b0f395dc5c08a878a680e14f6
+      "12.4.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/12.4.0posix-12.0.0-msvcrt-r1/winlibs-x86_64-posix-seh-gcc-12.4.0-mingw-w64msvcrt-12.0.0-r1.zip
+        sha256: 405d0bb9817f7f59924a4d8d98b6459b5dc7eb9a6527dce411f4c0dcaeb0425c
+      "11.5.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/11.5.0posix-12.0.0-msvcrt-r1/winlibs-x86_64-posix-seh-gcc-11.5.0-mingw-w64msvcrt-12.0.0-r1.zip
+        sha256: 7fece4547c0478302b028dac554ea0ce83d7d7652fd1f2f130a0920f384b5dc9
+
+  i686-w64-mingw32-ucrt:
+    description: MinGW-w64 i686 32-bit, UCRT runtime
+    versions:
+      "16.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.1.0posix-14.0.0-ucrt-r3/winlibs-i686-posix-dwarf-gcc-16.1.0-mingw-w64ucrt-14.0.0-r3.zip
+        sha256: c4c7419f2820ac2e169dc86f1397a07deff20297a107c7a1ca486643d8d435be
+      "15.3.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/15.3.0posix-14.0.0-ucrt-r1/winlibs-i686-posix-dwarf-gcc-15.3.0-mingw-w64ucrt-14.0.0-r1.zip
+        sha256: 416e94b5644a1b8ff3b2034bcb01186766b9522582324cf23717c974bb1a1617
+      "15.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/15.2.0posix-14.0.0-ucrt-r7/winlibs-i686-posix-dwarf-gcc-15.2.0-mingw-w64ucrt-14.0.0-r7.zip
+        sha256: 1f71415dc185c19c08dc7fb4b612c23d57b2f76a412394536e863df459e8d954
+      "15.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/15.1.0posix-13.0.0-ucrt-r4/winlibs-i686-posix-dwarf-gcc-15.1.0-mingw-w64ucrt-13.0.0-r4.zip
+        sha256: 8e4edc8cdef006ae11dc04393c383e4bcf3d185bdb7de9c828026a8a53af89d2
+      "14.3.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.3.0posix-12.0.0-ucrt-r1/winlibs-i686-posix-dwarf-gcc-14.3.0-mingw-w64ucrt-12.0.0-r1.zip
+        sha256: 1c00041bc55cc71cd6c2c717c0e7268d7a7edf7f7bcb1bb36875d73bdba1de07
+      "14.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.2.0posix-12.0.0-ucrt-r3/winlibs-i686-posix-dwarf-gcc-14.2.0-llvm-19.1.7-mingw-w64ucrt-12.0.0-r3.zip
+        sha256: d863b61bf6daaa207c7cc61e9cf349202f56b73db8a620dde0a68c06aec97769
+      "14.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.1.0posix-18.1.8-12.0.0-ucrt-r3/winlibs-i686-posix-dwarf-gcc-14.1.0-llvm-18.1.8-mingw-w64ucrt-12.0.0-r3.zip
+        sha256: d3b9f9232328893c106b64c03e0cd7b9fd353144875f6140909268f97282c4be
+      "13.3.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/13.3.0posix-11.0.1-ucrt-r1/winlibs-i686-posix-dwarf-gcc-13.3.0-mingw-w64ucrt-11.0.1-r1.zip
+        sha256: da795d3a74fea6b62f5df383215b072b5fde2a6719b4f94f002307b3aa5c5663
+      "13.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/13.2.0posix-18.1.5-11.0.1-ucrt-r8/winlibs-i686-posix-dwarf-gcc-13.2.0-llvm-18.1.5-mingw-w64ucrt-11.0.1-r8.zip
+        sha256: 1324aadbbf4b8f7aec672b79181a362e6e2da22da38d8eab55a926225243361a
+      "13.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/13.1.0posix-16.0.3-11.0.0-ucrt-r1/winlibs-i686-posix-dwarf-gcc-13.1.0-llvm-16.0.3-mingw-w64ucrt-11.0.0-r1.zip
+        sha256: dc9f369fcad5448d1741005d45ca76e9def7fad9161b25ba0a35434e6a13b0c3
+      "12.4.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/12.4.0posix-12.0.0-ucrt-r1/winlibs-i686-posix-dwarf-gcc-12.4.0-mingw-w64ucrt-12.0.0-r1.zip
+        sha256: 0bee5fe2aa5b4205aed980681774432ae6597564d6eb9c3a36f3110b225bf292
+      "11.5.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/11.5.0posix-12.0.0-ucrt-r1/winlibs-i686-posix-dwarf-gcc-11.5.0-mingw-w64ucrt-12.0.0-r1.zip
+        sha256: d9a3c74caac060cab4a419118534281a43a7bc7f9cdc818f2b08ef4dc6678705
+
+  i686-w64-mingw32-msvcrt:
+    description: MinGW-w64 i686 32-bit, legacy MSVCRT runtime
+    versions:
+      "16.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.1.0posix-14.0.0-msvcrt-r3/winlibs-i686-posix-dwarf-gcc-16.1.0-mingw-w64msvcrt-14.0.0-r3.zip
+        sha256: ec3235edd3a51b096471350aa389feeafb993333712274e5ae8973160e6490b5
+      "15.3.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/15.3.0posix-14.0.0-msvcrt-r1/winlibs-i686-posix-dwarf-gcc-15.3.0-mingw-w64msvcrt-14.0.0-r1.zip
+        sha256: 1dae12e4df5e979c8a9a4829afa3375dafcd71b855cd567942f8548956786563
+      "15.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/15.2.0posix-14.0.0-msvcrt-r7/winlibs-i686-posix-dwarf-gcc-15.2.0-mingw-w64msvcrt-14.0.0-r7.zip
+        sha256: ed7fb2db387834849af00216a609d36b3d65730ba28ca73c7d759360edaeb913
+      "15.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/15.1.0posix-13.0.0-msvcrt-r4/winlibs-i686-posix-dwarf-gcc-15.1.0-mingw-w64msvcrt-13.0.0-r4.zip
+        sha256: 8545a95b2bd854b5ab2e3044bf0d06998d103b3a89e059d1023299804cde2e6d
+      "14.3.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.3.0posix-12.0.0-msvcrt-r1/winlibs-i686-posix-dwarf-gcc-14.3.0-mingw-w64msvcrt-12.0.0-r1.zip
+        sha256: fff1638336ec3207994c8b885fda71a28485e05c5b1d8de41719dd50a526d70c
+      "14.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.2.0posix-19.1.7-12.0.0-msvcrt-r3/winlibs-i686-posix-dwarf-gcc-14.2.0-llvm-19.1.7-mingw-w64msvcrt-12.0.0-r3.zip
+        sha256: a60a63b5dcaa74d35ee67fc312cd855af49e2c0f178e5190e806052900575995
+      "14.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/14.1.0posix-18.1.8-12.0.0-msvcrt-r3/winlibs-i686-posix-dwarf-gcc-14.1.0-llvm-18.1.8-mingw-w64msvcrt-12.0.0-r3.zip
+        sha256: 7bf4e8df03b92b594bcb926eac137892d0facd4972276f37861211a3098ced7f
+      "13.3.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/13.3.0posix-11.0.1-msvcrt-r1/winlibs-i686-posix-dwarf-gcc-13.3.0-mingw-w64msvcrt-11.0.1-r1.zip
+        sha256: 439dfbbc7f16aaef70594669e65f725eccc0503a7827ede5bb257f8ca25c4ec7
+      "13.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/13.2.0posix-18.1.5-11.0.1-msvcrt-r8/winlibs-i686-posix-dwarf-gcc-13.2.0-llvm-18.1.5-mingw-w64msvcrt-11.0.1-r8.zip
+        sha256: 30005a7a73e97f8d5705b13e322fba680ab25aa2a69642feb53c2c47b3ae91cd
+      "13.1.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/13.1.0posix-16.0.3-11.0.0-msvcrt-r1/winlibs-i686-posix-dwarf-gcc-13.1.0-llvm-16.0.3-mingw-w64msvcrt-11.0.0-r1.zip
+        sha256: a0fc833f1ff8d632b33eb5a648abf99fade5a12362bc65b78a51a629b98b1ae2
+      "12.4.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/12.4.0posix-12.0.0-msvcrt-r1/winlibs-i686-posix-dwarf-gcc-12.4.0-mingw-w64msvcrt-12.0.0-r1.zip
+        sha256: a4cb1713bdaa6701f128e63fc34dea0b39135a87e004147f149c735a30e80e8b
+      "11.5.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/11.5.0posix-12.0.0-msvcrt-r1/winlibs-i686-posix-dwarf-gcc-11.5.0-mingw-w64msvcrt-12.0.0-r1.zip
+        sha256: d75d29c5ff885318ab6c1afb2880046a4fdb97d89b4cc868ba74cd1e37aa6711

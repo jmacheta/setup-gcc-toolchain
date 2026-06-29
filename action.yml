@@ -1,0 +1,34 @@
+name: Setup GCC Toolchain
+description: Download and configure a GCC cross-compilation toolchain for use in CI workflows
+author: Jan Macheta
+
+branding:
+  icon: tool
+  color: blue
+
+inputs:
+  toolchain:
+    description: >
+      Toolchain variant to install. Available: arm-none-eabi, aarch64-none-elf,
+      riscv-none-elf, xtensa-esp-elf, riscv32-esp-elf, avr
+    required: true
+  version:
+    description: >
+      Toolchain version to install (e.g. "15.2.1-1.1" for xPack, "esp-14.2.0_20241119"
+      for Espressif, "14.1.0" for ZakKemble AVR). Use "latest" to install the newest
+      available version.
+    required: true
+  enable-cache:
+    description: Cache the downloaded toolchain archive to speed up subsequent runs
+    required: false
+    default: "true"
+
+outputs:
+  toolchain-path:
+    description: Path to the installed toolchain root directory
+  cache-hit:
+    description: Whether the toolchain was restored from cache
+
+runs:
+  using: node20
+  main: dist/index.js
