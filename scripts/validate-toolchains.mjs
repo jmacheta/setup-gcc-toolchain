@@ -60,7 +60,12 @@ function dim(s) { return `\x1b[2m${s}\x1b[0m`; }
 /** HEAD request following up to 5 redirects. Returns {ok, status, finalUrl}. */
 function headRequest(url, redirectsLeft = 5) {
   return new Promise((resolve) => {
-    const mod = url.startsWith("https") ? https : http;
+    const scheme = new URL(url).protocol;
+    const mod = scheme === "https:" ? https : scheme === "http:" ? http : null;
+    if (!mod) {
+      resolve({ ok: false, status: 0, error: `unsupported URL scheme "${scheme}" — only http/https are downloadable by the action` });
+      return;
+    }
     const req = mod.request(url, { method: "HEAD", timeout: 15000 }, (res) => {
       const { statusCode, headers } = res;
       res.resume();
@@ -140,12 +145,21 @@ function validateStructure(db, filePath) {
 
         if (!url || typeof url !== "string") {
           error(`${loc}: missing or empty 'url'`);
-        } else if (!/^https?:\/\//.test(url)) {
-          error(`${loc}: url does not start with http(s): ${url}`);
+        } else {
+          let scheme;
+          try {
+            scheme = new URL(url).protocol;
+          } catch {
+            error(`${loc}: url is not a valid URL: ${url}`);
+            scheme = null;
+          }
+          if (scheme && scheme !== "http:" && scheme !== "https:") {
+            error(`${loc}: unsupported URL scheme "${scheme}" — the action can only download over http/https: ${url}`);
+          }
         }
 
         if (!sha256 || typeof sha256 !== "string") {
-          warn(`${loc}: missing sha256 — entry cannot be used in action`);
+          error(`${loc}: missing sha256 — toolchain is unusable, action refuses to install without integrity verification`);
         } else if (!SHA256_RE.test(sha256)) {
           error(`${loc}: sha256 is not 64 hex chars: "${sha256}"`);
         }
@@ -224,7 +238,7 @@ console.log(`Scanned ${totalVersions} versions across ${DB_FILES.length} file(s)
 
 if (totalErrors > 0 || totalWarnings > 0) {
   if (totalErrors > 0) console.log(red(`${totalErrors} error(s)`));
-  if (totalWarnings > 0) console.log(yellow(`${totalWarnings} warning(s) (missing sha256 — entries exist but action will refuse to install them)`));
+  if (totalWarnings > 0) console.log(yellow(`${totalWarnings} warning(s)`));
 }
 
 if (totalErrors === 0) {

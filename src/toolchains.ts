@@ -153,16 +153,21 @@ export function resolveToolchain(
   );
 }
 
-function compareVersions(a: string, b: string): number {
-  const splitVer = (v: string) =>
-    v.split(/[.\-]/).map((p) => (isNaN(Number(p)) ? p : Number(p)));
+export function compareVersions(a: string, b: string): number {
+  const splitVer = (v: string) => v.split(/[.\-_]/);
   const pa = splitVer(a);
   const pb = splitVer(b);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const va = pa[i] ?? 0;
-    const vb = pb[i] ?? 0;
-    if (va < vb) return -1;
-    if (va > vb) return 1;
+    const sa = pa[i] ?? "0";
+    const sb = pb[i] ?? "0";
+    const na = Number(sa);
+    const nb = Number(sb);
+    const bothNumeric = sa !== "" && sb !== "" && !isNaN(na) && !isNaN(nb);
+    if (bothNumeric) {
+      if (na !== nb) return na - nb;
+    } else if (sa !== sb) {
+      return sa < sb ? -1 : 1;
+    }
   }
   return 0;
 }
