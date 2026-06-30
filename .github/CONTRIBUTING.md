@@ -21,18 +21,18 @@ npm run validate:full  # also verify that all URLs are reachable
 
 ## Adding a toolchain version
 
-1. Find the upstream release on the vendor's GitHub releases page.
-2. Download the archive and compute `sha256sum <archive>`.
-3. Add an entry to the appropriate `toolchains-<platform>.yml` file under the correct vendor and toolchain key:
+- Find the upstream release on the vendor's GitHub releases page.
+- Download the archive and compute `sha256sum <archive>`.
+- Add an entry to the appropriate `toolchains-<platform>.yml` file under the correct vendor and toolchain key:
 
-```yaml
-"15.3.0-1.1":
-  url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/...
-  sha256: <64-hex-character checksum>
-```
+   ```yaml
+   "15.3.0-1.1":
+     url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/...
+     sha256: <64-hex-character checksum>
+   ```
 
-4. Run `npm run validate` to check structure and `npm run validate:full` to verify URLs.
-5. Open a PR — CI will run smoke tests against the new entries automatically.
+- Run `npm run validate` to check structure and `npm run validate:full` to verify URLs.
+- Open a PR — CI will run smoke tests against the new entries automatically.
 
 ## Pull request checklist
 

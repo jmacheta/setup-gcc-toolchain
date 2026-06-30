@@ -17,8 +17,8 @@ async function verifyChecksum(
   if (!expectedSha256) {
     throw new Error(
       `No SHA256 checksum available for ${path.basename(filePath)}. ` +
-        `This toolchain version cannot be verified. ` +
-        `Choose a different version or contribute a checksum via pull request.`
+      `This toolchain version cannot be verified. ` +
+      `Choose a different version or contribute a checksum via pull request.`
     );
   }
 
@@ -34,8 +34,8 @@ async function verifyChecksum(
   if (actual !== expectedSha256.toLowerCase()) {
     throw new Error(
       `SHA256 mismatch for ${path.basename(filePath)}\n` +
-        `  expected: ${expectedSha256}\n` +
-        `  actual:   ${actual}`
+      `  expected: ${expectedSha256}\n` +
+      `  actual:   ${actual}`
     );
   }
 }
@@ -50,7 +50,7 @@ function assertSupportedScheme(url: string): void {
   if (scheme !== "http:" && scheme !== "https:") {
     throw new Error(
       `Unsupported URL scheme "${scheme}" in toolchain database. ` +
-        `Only http:// and https:// downloads are supported: ${url}`
+      `Only http:// and https:// downloads are supported: ${url}`
     );
   }
 }
@@ -85,7 +85,7 @@ async function verifyOnPath(binPath: string, toolchainName: string): Promise<voi
     // Non-fatal: log a warning but don't fail — binary name may differ
     core.warning(
       `Expected binary not found at ${binaryPath}. ` +
-        `Verify the toolchain name or check the archive contents.`
+      `Verify the toolchain name or check the archive contents.`
     );
     return;
   }
@@ -118,7 +118,7 @@ async function run(): Promise<void> {
 
   const archiveName = path.basename(entry.url);
   const installDir = path.join(
-    process.env["RUNNER_TEMP"] ?? "/tmp",
+    process.env.RUNNER_TEMP ?? "/tmp",
     "gcc-toolchain",
     `${toolchainName}-${resolvedVersion}`
   );

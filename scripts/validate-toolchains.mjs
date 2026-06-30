@@ -210,8 +210,8 @@ async function validateFile(filePath) {
     if (!result.ok) {
       error(
         `${entry.loc}: URL unreachable ` +
-          (result.error ? `(${result.error})` : `(HTTP ${result.status})`) +
-          `\n      ${entry.url}`
+        (result.error ? `(${result.error})` : `(HTTP ${result.status})`) +
+        `\n      ${entry.url}`
       );
     }
   }
