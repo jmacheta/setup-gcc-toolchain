@@ -5,7 +5,10 @@ import * as exec from "@actions/exec";
 import * as path from "path";
 import * as crypto from "crypto";
 import * as fs from "fs";
-import { resolveToolchain } from "./toolchains";
+import { fileURLToPath } from "url";
+import { resolveToolchain } from "./toolchains.js";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function verifyChecksum(
   filePath: string,

@@ -1,7 +1,9 @@
 import { describe, it, expect } from "@jest/globals";
 import * as path from "path";
-import { resolveToolchain, compareVersions } from "../src/toolchains";
+import { fileURLToPath } from "url";
+import { resolveToolchain, compareVersions, type RunnerPlatform } from "../src/toolchains.js";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, "..");
 
 describe("resolveToolchain", () => {
@@ -117,7 +119,7 @@ describe("resolveToolchain", () => {
 
   it("throws for unsupported platform", () => {
     expect(() =>
-      resolveToolchain(REPO_ROOT, "arm-none-eabi", "latest", "windows-arm64" as any)
+      resolveToolchain(REPO_ROOT, "arm-none-eabi", "latest", "windows-arm64" as RunnerPlatform)
     ).toThrow(/No toolchain database available/);
   });
 
