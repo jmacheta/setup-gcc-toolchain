@@ -75,11 +75,10 @@ export function resolveToolchain(
     if (requestedVendor !== undefined) {
       throw new Error(
         `Toolchain "${toolchainName}" not found for vendor "${requestedVendor}" on this platform.\n` +
-        `Available vendors for this toolchain: ${
-          Object.entries(db)
-            .filter(([, vd]) => toolchainName in vd)
-            .map(([v]) => v)
-            .join(", ") || "none"
+        `Available vendors for this toolchain: ${Object.entries(db)
+          .filter(([, vd]) => toolchainName in vd)
+          .map(([v]) => v)
+          .join(", ") || "none"
         }`
       );
     }

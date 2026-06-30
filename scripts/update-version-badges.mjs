@@ -25,7 +25,7 @@ const yaml = require("js-yaml");
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, "..");
 
-const GIST_ID    = process.env.GIST_ID;
+const GIST_ID = process.env.GIST_ID;
 const GIST_TOKEN = process.env.GIST_TOKEN;
 
 if (!GIST_ID || !GIST_TOKEN) {

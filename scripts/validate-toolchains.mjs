@@ -44,10 +44,10 @@ const concurrency = concurrencyIdx !== -1 ? parseInt(args[concurrencyIdx + 1], 1
 const DB_FILES = singleFile
   ? [singleFile]
   : [
-      path.join(REPO_ROOT, "toolchains-linux-x64.yml"),
-      path.join(REPO_ROOT, "toolchains-linux-arm64.yml"),
-      path.join(REPO_ROOT, "toolchains-windows-x64.yml"),
-    ];
+    path.join(REPO_ROOT, "toolchains-linux-x64.yml"),
+    path.join(REPO_ROOT, "toolchains-linux-arm64.yml"),
+    path.join(REPO_ROOT, "toolchains-windows-x64.yml"),
+  ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

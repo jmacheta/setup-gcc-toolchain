@@ -75,8 +75,8 @@ async function verifyOnPath(binPath: string, toolchainName: string): Promise<voi
   const probe = toolchainName.includes("w64-mingw32")
     ? `${toolchainName}-gcc`
     : toolchainName === "x86_64-gcc" || toolchainName === "avr"
-    ? "gcc"
-    : `${toolchainName}-gcc`;
+      ? "gcc"
+      : `${toolchainName}-gcc`;
 
   const ext = process.platform === "win32" ? ".exe" : "";
   const binaryPath = path.join(binPath, probe + ext);
