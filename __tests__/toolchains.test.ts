@@ -1,6 +1,6 @@
 import { describe, it, expect } from "@jest/globals";
 import * as path from "path";
-import { resolveToolchain } from "../src/toolchains";
+import { resolveToolchain, compareVersions } from "../src/toolchains";
 
 const REPO_ROOT = path.join(__dirname, "..");
 
@@ -155,5 +155,24 @@ describe("resolveToolchain", () => {
     expect(() =>
       resolveToolchain(REPO_ROOT, "xtensa-esp-elf", "latest", "windows-x64")
     ).toThrow(/not found/);
+  });
+});
+
+describe("compareVersions", () => {
+  it("treats a release suffix as newer than a pure numeric patch", () => {
+    expect(compareVersions("14.2.rel1", "14.2.0")).toBeGreaterThan(0);
+  });
+
+  it("compares numeric segments by value, not lexicographically", () => {
+    expect(compareVersions("9.2.0", "10.1.0")).toBeLessThan(0);
+    expect(compareVersions("2.0", "10.0")).toBeLessThan(0);
+  });
+
+  it("compares underscore-separated date suffixes numerically", () => {
+    expect(compareVersions("13.2.0_20240530", "13.2.0_20240305")).toBeGreaterThan(0);
+  });
+
+  it("is reflexive for equal versions", () => {
+    expect(compareVersions("15.2.1-1.1", "15.2.1-1.1")).toBe(0);
   });
 });

@@ -37,6 +37,21 @@ async function verifyChecksum(
   }
 }
 
+function assertSupportedScheme(url: string): void {
+  let scheme: string;
+  try {
+    scheme = new URL(url).protocol;
+  } catch {
+    throw new Error(`Toolchain URL is not a valid URL: ${url}`);
+  }
+  if (scheme !== "http:" && scheme !== "https:") {
+    throw new Error(
+      `Unsupported URL scheme "${scheme}" in toolchain database. ` +
+        `Only http:// and https:// downloads are supported: ${url}`
+    );
+  }
+}
+
 function tarFlags(archiveName: string): string {
   if (archiveName.endsWith(".tar.xz")) return "xJ";
   if (archiveName.endsWith(".tar.bz2")) return "xj";
@@ -49,66 +64,6 @@ function findToolchainRoot(installDir: string): string {
     return stat.isDirectory();
   });
   return entries.length === 1 ? path.join(installDir, entries[0]) : installDir;
-}
-
-const GCC_TOOLS = [
-  "gcc", "g++", "cpp", "ar", "as", "ld", "nm",
-  "objcopy", "objdump", "ranlib", "readelf", "size", "strings", "strip", "gdb",
-];
-
-async function runDumpMachine(gccPath: string): Promise<string | undefined> {
-  let output = "";
-  const code = await exec.exec(`"${gccPath}"`, ["-dumpmachine"], {
-    silent: true,
-    ignoreReturnCode: true,
-    listeners: { stdout: (d) => { output += d.toString(); } },
-  });
-  if (code !== 0) return undefined;
-  return output.trim() || undefined;
-}
-
-async function createTripletSymlinks(binPath: string): Promise<void> {
-  const ext = process.platform === "win32" ? ".exe" : "";
-
-  // Find the gcc binary — either bare "gcc" or prefixed "<triplet>-gcc"
-  let gccBin: string | undefined;
-  let existingPrefix: string | undefined;
-
-  const bare = path.join(binPath, "gcc" + ext);
-  if (fs.existsSync(bare)) {
-    gccBin = bare;
-    existingPrefix = "";
-  } else {
-    const entry = fs.readdirSync(binPath).find((f) => f.endsWith("-gcc" + ext));
-    if (entry) {
-      gccBin = path.join(binPath, entry);
-      existingPrefix = entry.slice(0, -("-gcc" + ext).length);
-    }
-  }
-
-  if (!gccBin) return;
-
-  const triplet = await runDumpMachine(gccBin);
-  if (!triplet) return;
-
-  // No symlinks needed when the binary prefix already matches the triplet
-  if (existingPrefix === triplet) return;
-
-  let created = 0;
-  for (const tool of GCC_TOOLS) {
-    const src = path.join(binPath, (existingPrefix ? `${existingPrefix}-` : "") + tool + ext);
-    const dest = path.join(binPath, `${triplet}-${tool}${ext}`);
-
-    if (!fs.existsSync(src)) continue;
-    if (fs.existsSync(dest)) continue;
-
-    fs.symlinkSync(src, dest);
-    created++;
-  }
-
-  if (created > 0) {
-    core.info(`Created ${created} symlink(s) with triplet prefix "${triplet}"`);
-  }
 }
 
 async function verifyOnPath(binPath: string, toolchainName: string): Promise<void> {
@@ -156,6 +111,7 @@ async function run(): Promise<void> {
 
   core.info(`Toolchain: ${toolchainName} @ ${resolvedVersion}`);
   core.info(`URL: ${entry.url}`);
+  assertSupportedScheme(entry.url);
 
   const archiveName = path.basename(entry.url);
   const installDir = path.join(
@@ -211,10 +167,6 @@ async function run(): Promise<void> {
   core.setOutput("cache-hit", String(cacheHit));
 
   core.info(`Added to PATH (first position): ${binPath}`);
-
-  if (process.platform !== "win32") {
-    await createTripletSymlinks(binPath);
-  }
 
   await verifyOnPath(binPath, toolchainName);
 }
