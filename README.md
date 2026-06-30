@@ -7,6 +7,7 @@
 [![Weekly](https://github.com/jmacheta/setup-gcc-toolchain/actions/workflows/weekly.yml/badge.svg)](https://github.com/jmacheta/setup-gcc-toolchain/actions/workflows/weekly.yml)
 [![Monthly](https://github.com/jmacheta/setup-gcc-toolchain/actions/workflows/monthly.yml/badge.svg)](https://github.com/jmacheta/setup-gcc-toolchain/actions/workflows/monthly.yml)
 [![Maintain Tags](https://github.com/jmacheta/setup-gcc-toolchain/actions/workflows/maintain_tags.yml/badge.svg)](https://github.com/jmacheta/setup-gcc-toolchain/actions/workflows/maintain_tags.yml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/b52546537c524083bd2dbb646b6bdbef)](https://app.codacy.com/gh/jmacheta/setup-gcc-toolchain/dashboard?branch=main)
 
 A GitHub Action that downloads, verifies, and adds a GCC cross-compilation toolchain to `PATH`. Covers ARM, AArch64, RISC-V, Xtensa (ESP32), AVR, MinGW-w64, and native x86\_64, on both Linux and Windows runners — see the [support matrix](#supported-toolchains) below for exact vendor/platform coverage.
 
