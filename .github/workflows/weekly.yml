@@ -10,11 +10,11 @@ jobs:
     name: Validate all URLs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
 
       - run: npm ci
@@ -82,7 +82,7 @@ jobs:
             toolchain: riscv32-esp-elf
             binary: riscv32-esp-elf-gcc
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup ${{ matrix.toolchain }} latest
         uses: ./
@@ -127,7 +127,7 @@ jobs:
           - toolchain: i686-w64-mingw32-msvcrt
             binary: i686-w64-mingw32-gcc
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup ${{ matrix.toolchain }} latest
         uses: ./
@@ -154,7 +154,7 @@ jobs:
     if: failure()
     steps:
       - name: Create issue on failure
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const title = `Nightly checks failed — ${new Date().toISOString().slice(0, 10)}`;

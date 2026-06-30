@@ -17,8 +17,7 @@
  *   --concurrency  Max parallel HEAD requests (default: 20)
  */
 
-import { readFileSync, readdirSync } from "node:fs";
-import { createServer } from "node:https";
+import { readFileSync } from "node:fs";
 import https from "node:https";
 import http from "node:http";
 import path from "node:path";
@@ -105,11 +104,6 @@ let totalVersions = 0;
 function error(msg) {
   console.error(`  ${red("✗")} ${msg}`);
   totalErrors++;
-}
-
-function warn(msg) {
-  console.warn(`  ${yellow("⚠")} ${msg}`);
-  totalWarnings++;
 }
 
 function validateStructure(db, filePath) {
@@ -216,8 +210,8 @@ async function validateFile(filePath) {
     if (!result.ok) {
       error(
         `${entry.loc}: URL unreachable ` +
-          (result.error ? `(${result.error})` : `(HTTP ${result.status})`) +
-          `\n      ${entry.url}`
+        (result.error ? `(${result.error})` : `(HTTP ${result.status})`) +
+        `\n      ${entry.url}`
       );
     }
   }

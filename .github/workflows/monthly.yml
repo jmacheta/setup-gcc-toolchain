@@ -44,7 +44,7 @@ jobs:
           - { toolchain: avr,              version: "12.1.0", binary: avr-gcc }
           - { toolchain: avr,              version: "11.1.0", binary: avr-gcc }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup ${{ matrix.toolchain }} ${{ matrix.version }}
         uses: ./
@@ -79,7 +79,7 @@ jobs:
           - { toolchain: xtensa-esp-elf,   version: "16.1.0_20260609", binary: xtensa-esp-elf-gcc }
           - { toolchain: riscv32-esp-elf,  version: "16.1.0_20260609", binary: riscv32-esp-elf-gcc }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup ${{ matrix.toolchain }} ${{ matrix.version }}
         uses: ./
@@ -118,7 +118,7 @@ jobs:
           - { toolchain: i686-w64-mingw32-ucrt,     version: "16.1.0",     binary: i686-w64-mingw32-gcc }
           - { toolchain: i686-w64-mingw32-msvcrt,   version: "16.1.0",     binary: i686-w64-mingw32-gcc }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup ${{ matrix.toolchain }} ${{ matrix.version }}
         uses: ./
@@ -148,7 +148,7 @@ jobs:
           - { runner: ubuntu-latest,  toolchain: arm-none-eabi, version: "15.2.1-1.1", binary: arm-none-eabi-gcc }
           - { runner: windows-latest, toolchain: arm-none-eabi, version: "15.2.1-1.1", binary: arm-none-eabi-gcc }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: First install (populates cache)
         id: first
@@ -196,7 +196,7 @@ jobs:
     if: failure()
     steps:
       - name: Create issue on failure
-        uses: actions/github-script@v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const title = `Weekly checks failed — ${new Date().toISOString().slice(0, 10)}`;

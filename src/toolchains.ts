@@ -44,7 +44,7 @@ export function loadDatabase(repoRoot: string, platform?: RunnerPlatform): Toolc
   if (!dbFile) {
     throw new Error(
       `No toolchain database available for runner platform "${plat}".\n` +
-        `Supported platforms: ${Object.keys(DB_FILES).join(", ")}`
+      `Supported platforms: ${Object.keys(DB_FILES).join(", ")}`
     );
   }
   const dbPath = path.join(repoRoot, dbFile);
@@ -62,7 +62,7 @@ export function resolveToolchain(
   const db = loadDatabase(repoRoot, platform);
 
   // Collect matching vendor defs, filtered by vendor if specified
-  const matches: Array<{ vendor: string; def: ToolchainDef }> = [];
+  const matches: { vendor: string; def: ToolchainDef }[] = [];
   for (const [vendor, vendorDef] of Object.entries(db)) {
     if (toolchainName in vendorDef) {
       if (requestedVendor === undefined || vendor === requestedVendor) {
@@ -75,18 +75,18 @@ export function resolveToolchain(
     if (requestedVendor !== undefined) {
       throw new Error(
         `Toolchain "${toolchainName}" not found for vendor "${requestedVendor}" on this platform.\n` +
-          `Available vendors for this toolchain: ${
-            Object.entries(db)
-              .filter(([, vd]) => toolchainName in vd)
-              .map(([v]) => v)
-              .join(", ") || "none"
-          }`
+        `Available vendors for this toolchain: ${
+          Object.entries(db)
+            .filter(([, vd]) => toolchainName in vd)
+            .map(([v]) => v)
+            .join(", ") || "none"
+        }`
       );
     }
     const available = Object.values(db).flatMap((v) => Object.keys(v)).sort();
     throw new Error(
       `Toolchain "${toolchainName}" not found for this platform.\n` +
-        `Available: ${available.join(", ")}`
+      `Available: ${available.join(", ")}`
     );
   }
 
@@ -98,7 +98,7 @@ export function resolveToolchain(
     if (providingVendors.length > 1) {
       throw new Error(
         `Version "${requestedVersion}" of toolchain "${toolchainName}" is provided by multiple vendors: ${providingVendors.join(", ")}.\n` +
-          `Specify a vendor explicitly, e.g. "${providingVendors[0]}/${toolchainName}".`
+        `Specify a vendor explicitly, e.g. "${providingVendors[0]}/${toolchainName}".`
       );
     }
   }
@@ -117,7 +117,7 @@ export function resolveToolchain(
       const vendors = tied.map((v) => v.vendor).join(", ");
       throw new Error(
         `Toolchain "${toolchainName}" latest version "${topVersion.version}" is provided by multiple vendors: ${vendors}.\n` +
-          `Specify a vendor explicitly, e.g. "${tied[0].vendor}/${toolchainName}".`
+        `Specify a vendor explicitly, e.g. "${tied[0].vendor}/${toolchainName}".`
       );
     }
   }
@@ -149,7 +149,7 @@ export function resolveToolchain(
   const vendorNames = matches.map(({ vendor }) => vendor).join(", ");
   throw new Error(
     `Version "${requestedVersion}" not found for toolchain "${toolchainName}" (vendor(s): ${vendorNames}).\n` +
-      `Available versions: ${allVersions.join(", ")}`
+    `Available versions: ${allVersions.join(", ")}`
   );
 }
 
