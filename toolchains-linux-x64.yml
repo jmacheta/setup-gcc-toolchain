@@ -519,7 +519,7 @@ zakkemble:
     versions:
       "15.2.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v15.2.0-1/avr-gcc-15.2.0-x64-linux.tar.bz2
-        sha256: 
+        sha256: d90765e6d975950afa235aa998122f97aae8b00504399068b6c9d0bf4994b0fe
       "15.1.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v15.1.0-1/avr-gcc-15.1.0-x64-linux.tar.bz2
         sha256: afedbf3643ca8f880b96ef9334511ce4ec3606ff3227744bc323565039a58203
@@ -537,22 +537,22 @@ zakkemble:
         sha256: 9ebf16ab4e9c52c0b21d15df6bd97080cc4d1f5c0327c5b5b69955f3ee1bfd61
       "10.1.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v10.1.0-1/avr-gcc-10.1.0-x64-linux.tar.bz2
-        sha256: 
+        sha256: b1a84a62dccbf2141993f0c6a130863180ac27516fb3af45de30879c8cfd456f
       "9.2.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v9.2.0-1/avr-gcc-9.2.0-x64-linux.tar.bz2
-        sha256: 
+        sha256: d32e14e5dcdd812bec4f1fb2c96481d6138cc4ba4998053a3eb20cbde24f32d9
       "9.1.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v9.1.0-1/avr-gcc-9.1.0-x64-linux.tar.bz2
-        sha256: 
+        sha256: c6a548e4856fd7320419fb0683f9c56beaff015910f12610fffbc081536f4d1d
       "8.3.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v8.3.0-1/avr-gcc-8.3.0-x64-linux.tar.bz2
-        sha256: 
+        sha256: 22aed0041ba93cba3aea76dcdfb388608e1ce2d701f50119acc79c27a2a58451
       "8.2.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v8.2.0-1/avr-gcc-8.2.0-x64-linux.tar.bz2
-        sha256: 
+        sha256: 1b8e3ea2535f2a8832a467f135a8f1985d87413b164136c3834e25c1cd1797fb
       "8.1.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v8.1.0-1/avr-gcc-8.1.0-x64-linux.tar.bz2
-        sha256: 
+        sha256: 72ae3d40ee938aa0f3671bc48be98d572991d2c3d384341de77acff47572ea66
       "7.3.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v7.3.0-1/avr-gcc-7.3.0-x64-linux.tar.bz2
-        sha256: 
+        sha256: 68dc18779d8f187aa496f5d670ee7ff6078538f0e232d4560ed528fefa5b8e0b

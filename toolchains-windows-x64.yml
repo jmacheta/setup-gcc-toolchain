@@ -323,7 +323,7 @@ zakkemble:
     versions:
       "15.2.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v15.2.0-1/avr-gcc-15.2.0-x64-windows.zip
-        sha256: 
+        sha256: 3bcfdbdbff6e3576ef0bef9e119b16f7012657d30f002d6d9d4848a7efd4f8b7
       "15.1.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v15.1.0-1/avr-gcc-15.1.0-x64-windows.zip
         sha256: ae931232ee4c8478476c91d75cf1fec49d68c7bd0ff0b03b20be98f60812c7d8
@@ -341,7 +341,7 @@ zakkemble:
         sha256: e11ec78125a11242cc45169d96bbff9f35b4b7b916711ff4fad64c62379a71f7
       "10.1.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v10.1.0-1/avr-gcc-10.1.0-x64-windows.zip
-        sha256: 
+        sha256: 1b9aa62207bb3cb9ac9edb7d6a77b1b0ea834a649e8159bc3ed86e1bc2129464
 
 winlibs:
 
