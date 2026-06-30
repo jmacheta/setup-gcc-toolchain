@@ -99,7 +99,7 @@ async function verifyOnPath(binPath: string, toolchainName: string): Promise<voi
 async function run(): Promise<void> {
   const toolchainName = core.getInput("toolchain", { required: true });
   const vendor = core.getInput("vendor") || undefined;
-  const version = core.getInput("version", { required: true });
+  const version = core.getInput("version") || "latest";
   const enableCache = core.getInput("enable-cache") !== "false";
 
   const repoRoot = path.join(__dirname, "..");

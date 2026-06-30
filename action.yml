@@ -23,9 +23,10 @@ inputs:
   version:
     description: >
       Toolchain version to install (e.g. "15.2.1-1.1" for xPack, "esp-14.2.0_20241119"
-      for Espressif, "14.1.0" for ZakKemble AVR). Use "latest" to install the newest
-      available version.
-    required: true
+      for Espressif, "14.1.0" for ZakKemble AVR). Use "latest" or omit to install the
+      newest available version.
+    required: false
+    default: "latest"
   enable-cache:
     description: Cache the downloaded toolchain archive to speed up subsequent runs
     required: false
