@@ -235,7 +235,7 @@ xpack:
         sha256: 56cc2e340bdcaa718862b3526a7c550605e699847a8903e471336ba0a4535c68
 
   x86_64-gcc:
-    description: Native x86_64 GCC (no cross prefix)
+    description: Native x86_64 GCC
     versions:
       "15.2.0-1":
         url: https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v15.2.0-1/xpack-gcc-15.2.0-1-win32-x64.zip
@@ -346,7 +346,7 @@ zakkemble:
 winlibs:
 
   x86_64-w64-mingw32-ucrt:
-    description: MinGW-w64 x86_64, UCRT runtime (recommended)
+    description: MinGW-w64 x86_64, UCRT runtime
     versions:
       "16.1.0":
         url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.1.0posix-14.0.0-ucrt-r3/winlibs-x86_64-posix-seh-gcc-16.1.0-mingw-w64ucrt-14.0.0-r3.zip
