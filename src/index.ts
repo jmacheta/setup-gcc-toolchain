@@ -72,11 +72,7 @@ function findToolchainRoot(installDir: string): string {
 async function verifyOnPath(binPath: string, toolchainName: string): Promise<void> {
   // Derive a sensible binary name to probe: use the triplet prefix if present,
   // otherwise plain "gcc". For winlibs mingw the binary is e.g. x86_64-w64-mingw32-gcc.
-  const probe = toolchainName.includes("w64-mingw32")
-    ? `${toolchainName}-gcc`
-    : toolchainName === "x86_64-gcc" || toolchainName === "avr"
-      ? "gcc"
-      : `${toolchainName}-gcc`;
+  const probe = toolchainName === "x86_64-gcc" ? "gcc" : `${toolchainName}-gcc`;
 
   const ext = process.platform === "win32" ? ".exe" : "";
   const binaryPath = path.join(binPath, probe + ext);
