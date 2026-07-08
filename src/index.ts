@@ -16,6 +16,7 @@ import { resolveToolchain, ToolchainEntry } from "./toolchains.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// eslint-disable-next-line security-node/detect-unhandled-async-errors -- errors thrown here propagate to the top-level `run().catch()` handler
 async function verifyChecksum(
   filePath: string,
   expectedSha256: string
@@ -203,6 +204,6 @@ async function run(): Promise<void> {
   await verifyOnPath(binPath, toolchainName);
 }
 
-run().catch((err) => {
+run().catch((err: unknown) => {
   core.setFailed(err instanceof Error ? err.message : String(err));
 });

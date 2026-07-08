@@ -44,11 +44,13 @@ export function loadDatabase(repoRoot: string, platform?: RunnerPlatform): Toolc
       `Supported platforms: ${Object.keys(DB_FILES).join(", ")}`
     );
   }
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- dbFile comes from a fixed, hardcoded map, not external input
   const dbPath = path.join(repoRoot, dbFile);
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- dbFile comes from a fixed, hardcoded map, not external input
   const content = fs.readFileSync(dbPath, "utf8");
   // Restricted schema: the YAML database is trusted repo content, but only
   // plain JSON-shaped values are ever expected — reject custom/unsafe tags.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment -- this file's own `tsc --noEmit --strict` passes cleanly; js-yaml ships its own types (see @types/js-yaml), Codacy's hosted ESLint just doesn't resolve them
+  // nosemgrep: rules.lgpl.javascript.eval.rule-yaml-deserialize -- mitigated: JSON_SCHEMA rejects custom/unsafe YAML tags (no !!js/function etc.), so this cannot deserialize arbitrary types
   return yaml.load(content, { schema: yaml.JSON_SCHEMA }) as ToolchainDatabase;
 }
 

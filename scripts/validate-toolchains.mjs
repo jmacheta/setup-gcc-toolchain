@@ -56,37 +56,47 @@ function yellow(s) { return `\x1b[33m${s}\x1b[0m`; }
 function green(s) { return `\x1b[32m${s}\x1b[0m`; }
 function dim(s) { return `\x1b[2m${s}\x1b[0m`; }
 
-/** HEAD request following up to 5 redirects. Returns {ok, status, finalUrl}. */
-function headRequest(url, redirectsLeft = 5) {
+/** Single HEAD request, no redirect handling. Returns {statusCode, location} or {error}. */
+function singleHeadRequest(url) {
   return new Promise((resolve) => {
     const scheme = new URL(url).protocol;
     const mod = scheme === "https:" ? https : scheme === "http:" ? http : null;
     if (!mod) {
-      resolve({ ok: false, status: 0, error: `unsupported URL scheme "${scheme}" — only http/https are downloadable by the action` });
+      resolve({ error: `unsupported URL scheme "${scheme}" — only http/https are downloadable by the action` });
       return;
     }
     const req = mod.request(url, { method: "HEAD", timeout: 15000 }, (res) => {
-      const { statusCode, headers } = res;
       res.resume();
-      if (statusCode >= 300 && statusCode < 400 && headers.location && redirectsLeft > 0) {
-        const next = new URL(headers.location, url).href;
-        resolve(headRequest(next, redirectsLeft - 1));
-      } else {
-        resolve({ ok: statusCode < 400, status: statusCode, finalUrl: url });
-      }
+      resolve({ statusCode: res.statusCode, location: res.headers.location });
     });
-    req.on("error", (e) => resolve({ ok: false, status: 0, error: e.message }));
-    req.on("timeout", () => { req.destroy(); resolve({ ok: false, status: 0, error: "timeout" }); });
+    req.on("error", (e) => resolve({ error: e.message }));
+    req.on("timeout", () => { req.destroy(); resolve({ error: "timeout" }); });
     req.end();
   });
+}
+
+/** HEAD request following up to 5 redirects. Returns {ok, status, finalUrl}. */
+async function headRequest(url) {
+  let current = url;
+  for (let redirectsLeft = 5; redirectsLeft >= 0; redirectsLeft--) {
+    const result = await singleHeadRequest(current);
+    if (result.error !== undefined) return { ok: false, status: 0, error: result.error };
+    const { statusCode, location } = result;
+    if (statusCode >= 300 && statusCode < 400 && location && redirectsLeft > 0) {
+      current = new URL(location, current).href;
+      continue;
+    }
+    return { ok: statusCode < 400, status: statusCode, finalUrl: current };
+  }
+  return { ok: false, status: 0, error: "too many redirects" };
 }
 
 /** Run tasks with bounded concurrency. tasks: array of () => Promise */
 async function pool(tasks, limit) {
   const results = [];
   let idx = 0;
-  // eslint-disable-next-line security-node/detect-unhandled-async-errors -- rejections propagate through the Promise.all below
   async function worker() {
+    // eslint-disable-next-line security-node/detect-unhandled-async-errors -- rejections propagate through the Promise.all below
     while (idx < tasks.length) {
       const i = idx++;
       // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
@@ -176,6 +186,7 @@ async function validateFile(filePath) {
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath comes from a hardcoded list or an operator-supplied CLI flag
     const content = readFileSync(filePath, "utf8");
+    // nosemgrep: rules.lgpl.javascript.eval.rule-yaml-deserialize -- mitigated: JSON_SCHEMA rejects custom/unsafe YAML tags
     db = yaml.load(content, { schema: yaml.JSON_SCHEMA });
   } catch (e) {
     error(`Failed to parse YAML: ${e.message}`);

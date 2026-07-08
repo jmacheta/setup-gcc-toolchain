@@ -62,6 +62,7 @@ const latest = new Map();
 
 for (const file of DB_FILES) {
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- file comes from the hardcoded DB_FILES list above
+  // nosemgrep: rules.lgpl.javascript.eval.rule-yaml-deserialize -- mitigated: JSON_SCHEMA rejects custom/unsafe YAML tags
   const db = yaml.load(readFileSync(file, "utf8"), { schema: yaml.JSON_SCHEMA });
   for (const vendorDef of Object.values(db)) {
     for (const [toolchain, tcDef] of Object.entries(vendorDef)) {

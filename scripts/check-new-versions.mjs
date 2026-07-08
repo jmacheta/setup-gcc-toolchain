@@ -123,6 +123,7 @@ function sameSkeleton(a, b) {
 async function ghApi(url) {
   const headers = { "User-Agent": "setup-gcc-toolchain-version-check" };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  // nosemgrep: rules.lgpl.javascript.ssrf.rule-node-ssrf -- mitigated by assertTrustedUrl() above: only api.github.com/github.com/objects.githubusercontent.com/developer.arm.com over https are allowed
   const res = await fetch(assertTrustedUrl(url), { headers });
   if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
   return res.json();
@@ -202,6 +203,7 @@ function findMatch(oldUrl, oldKey, minVersion, candidates) {
 // ── Checksum resolution ──────────────────────────────────────────────────────
 
 async function fetchText(url) {
+  // nosemgrep: rules.lgpl.javascript.ssrf.rule-node-ssrf -- mitigated by assertTrustedUrl() above
   const res = await fetch(assertTrustedUrl(url), { headers: { "User-Agent": "setup-gcc-toolchain-version-check" } });
   if (!res.ok) return null;
   return res.text();
@@ -216,6 +218,7 @@ function findHashForFile(sumsText, targetFilename) {
 }
 
 async function downloadAndHash(url) {
+  // nosemgrep: rules.lgpl.javascript.ssrf.rule-node-ssrf -- mitigated by assertTrustedUrl() above
   const res = await fetch(assertTrustedUrl(url));
   if (!res.ok) throw new Error(`download failed: HTTP ${res.status}`);
   const buf = Buffer.from(await res.arrayBuffer());
@@ -290,6 +293,7 @@ for (const file of DB_FILES) {
   const filePath = path.join(REPO_ROOT, file);
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath is built from a fixed, hardcoded list, not external input
   let text = readFileSync(filePath, "utf8");
+  // nosemgrep: rules.lgpl.javascript.eval.rule-yaml-deserialize -- mitigated: JSON_SCHEMA rejects custom/unsafe YAML tags
   const db = yaml.load(text, { schema: yaml.JSON_SCHEMA });
   let fileChanged = false;
 
