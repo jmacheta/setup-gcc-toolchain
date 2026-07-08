@@ -28,30 +28,53 @@ export function detectPlatform(): RunnerPlatform {
   return `${os}-${arch}` as RunnerPlatform;
 }
 
-const DB_FILES: Partial<Record<RunnerPlatform, string>> = {
-  "linux-x64": "toolchains-linux-x64.yml",
-  "linux-arm64": "toolchains-linux-arm64.yml",
-  "windows-x64": "toolchains-windows-x64.yml",
-};
+const DB_FILES: ReadonlyMap<RunnerPlatform, string> = new Map([
+  ["linux-x64", "toolchains-linux-x64.yml"],
+  ["linux-arm64", "toolchains-linux-arm64.yml"],
+  ["windows-x64", "toolchains-windows-x64.yml"],
+]);
+
+const MAX_YAML_BYTES = 2 * 1024 * 1024; // 2 MiB — our largest database file today is ~45 KB
+
+/**
+ * Resolves `relativeName` against `root` and verifies the result is still
+ * inside `root` — a path-traversal guard, since `root` + a hardcoded
+ * filename is otherwise indistinguishable from arbitrary path input to a
+ * static analyzer (and a defensive check costs nothing here).
+ */
+function resolveWithinRoot(root: string, relativeName: string): string {
+  const resolvedRoot = path.resolve(root) + path.sep;
+  const resolved = path.resolve(root, relativeName);
+  if (!resolved.startsWith(resolvedRoot)) {
+    throw new Error(`refusing to access path outside repo root: ${relativeName}`);
+  }
+  return resolved;
+}
 
 export function loadDatabase(repoRoot: string, platform?: RunnerPlatform): ToolchainDatabase {
   const plat = platform ?? detectPlatform();
-  // eslint-disable-next-line security/detect-object-injection -- plat is a closed RunnerPlatform union, not external input
-  const dbFile = DB_FILES[plat];
+  const dbFile = DB_FILES.get(plat);
   if (!dbFile) {
     throw new Error(
       `No toolchain database available for runner platform "${plat}".\n` +
-      `Supported platforms: ${Object.keys(DB_FILES).join(", ")}`
+      `Supported platforms: ${[...DB_FILES.keys()].join(", ")}`
     );
   }
-  const dbPath = path.join(repoRoot, dbFile);
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- dbFile comes from a fixed, hardcoded map, not external input
+  const dbPath = resolveWithinRoot(repoRoot, dbFile);
   const content = fs.readFileSync(dbPath, "utf8");
+  if (content.length > MAX_YAML_BYTES) {
+    throw new Error(`${dbFile}: refusing to parse ${content.length} bytes of YAML (limit ${MAX_YAML_BYTES})`);
+  }
   // Restricted schema: the YAML database is trusted repo content, but only
   // plain JSON-shaped values are ever expected — reject custom/unsafe tags.
+  // js-yaml 4+ removed safeLoad/safeDump: plain `load()` is the safe function
+  // now (the old unsafe constructors require an explicit opt-in Schema).
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment -- this file's own `tsc --noEmit --strict` passes cleanly; js-yaml ships its own types (see @types/js-yaml), Codacy's hosted ESLint just doesn't resolve them
-  // nosemgrep: rules.lgpl.javascript.eval.rule-yaml-deserialize -- mitigated: JSON_SCHEMA rejects custom/unsafe YAML tags (no !!js/function etc.), so this cannot deserialize arbitrary types
-  return yaml.load(content, { schema: yaml.JSON_SCHEMA }) as ToolchainDatabase;
+  const parsed: unknown = yaml.load(content, { schema: yaml.JSON_SCHEMA });
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error(`${dbFile}: expected the document root to be a mapping, got ${Array.isArray(parsed) ? "an array" : typeof parsed}`);
+  }
+  return parsed as ToolchainDatabase;
 }
 
 interface VendorMatch {
@@ -62,10 +85,9 @@ interface VendorMatch {
 function findVendorMatches(db: ToolchainDatabase, toolchainName: string, requestedVendor?: string): VendorMatch[] {
   const matches: VendorMatch[] = [];
   for (const [vendor, vendorDef] of Object.entries(db)) {
-    if (toolchainName in vendorDef && (requestedVendor === undefined || vendor === requestedVendor)) {
-      // eslint-disable-next-line security/detect-object-injection -- guarded by the `in` check above
-      matches.push({ vendor, def: vendorDef[toolchainName] });
-    }
+    if (requestedVendor !== undefined && vendor !== requestedVendor) continue;
+    const found = Object.entries(vendorDef).find(([name]) => name === toolchainName);
+    if (found) matches.push({ vendor, def: found[1] });
   }
   return matches;
 }
@@ -141,9 +163,9 @@ function pickLatest(matches: VendorMatch[], toolchainName: string): ToolchainEnt
 
 function pickVersion(matches: VendorMatch[], toolchainName: string, requestedVersion: string): ToolchainEntry {
   for (const { def } of matches) {
-    if (requestedVersion in def.versions) {
-      // eslint-disable-next-line security/detect-object-injection -- guarded by the `in` check above
-      const entry = def.versions[requestedVersion];
+    const found = Object.entries(def.versions).find(([ver]) => ver === requestedVersion);
+    if (found) {
+      const entry = found[1];
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- see pickLatest
       return { url: entry.url, sha256: entry.sha256 ?? "" };
     }

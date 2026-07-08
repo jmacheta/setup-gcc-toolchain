@@ -22,10 +22,8 @@ import https from "node:https";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createRequire } from "node:module";
-
-const require = createRequire(import.meta.url);
-const yaml = require("js-yaml");
+import { loadYamlDatabase } from "./lib/safe-yaml.mjs";
+import { resolveWithinRoot } from "./lib/safe-path.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, "..");
@@ -37,6 +35,8 @@ const SHA256_RE = /^[0-9a-f]{64}$/;
 const args = process.argv.slice(2);
 const noNetwork = args.includes("--no-network");
 const fileIdx = args.indexOf("--file");
+// --file is a deliberate escape hatch (validate an arbitrary file, e.g. a
+// not-yet-renamed WIP database) — intentionally NOT constrained to the repo.
 const singleFile = fileIdx !== -1 ? args[fileIdx + 1] : null;
 const concurrencyIdx = args.indexOf("--concurrency");
 const concurrency = concurrencyIdx !== -1 ? parseInt(args[concurrencyIdx + 1], 10) : 20;
@@ -44,9 +44,9 @@ const concurrency = concurrencyIdx !== -1 ? parseInt(args[concurrencyIdx + 1], 1
 const DB_FILES = singleFile
   ? [singleFile]
   : [
-    path.join(REPO_ROOT, "toolchains-linux-x64.yml"),
-    path.join(REPO_ROOT, "toolchains-linux-arm64.yml"),
-    path.join(REPO_ROOT, "toolchains-windows-x64.yml"),
+    resolveWithinRoot(REPO_ROOT, "toolchains-linux-x64.yml"),
+    resolveWithinRoot(REPO_ROOT, "toolchains-linux-arm64.yml"),
+    resolveWithinRoot(REPO_ROOT, "toolchains-windows-x64.yml"),
   ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -93,18 +93,20 @@ async function headRequest(url) {
 
 /** Run tasks with bounded concurrency. tasks: array of () => Promise */
 async function pool(tasks, limit) {
-  const results = [];
+  const results = new Map();
   let idx = 0;
   async function worker() {
-    // eslint-disable-next-line security-node/detect-unhandled-async-errors -- rejections propagate through the Promise.all below
     while (idx < tasks.length) {
       const i = idx++;
-      // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
-      results[i] = await tasks[i]();
+      try {
+        results.set(i, await tasks[i]());
+      } catch (err) {
+        throw new Error(`task ${i} failed: ${err.message}`, { cause: err });
+      }
     }
   }
   await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, worker));
-  return results;
+  return Array.from({ length: tasks.length }, (_, i) => results.get(i));
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────
@@ -184,10 +186,9 @@ async function validateFile(filePath) {
 
   let db;
   try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath comes from a hardcoded list or an operator-supplied CLI flag
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- default paths are validated by resolveWithinRoot() above; --file is an intentional operator-controlled escape hatch
     const content = readFileSync(filePath, "utf8");
-    // nosemgrep: rules.lgpl.javascript.eval.rule-yaml-deserialize -- mitigated: JSON_SCHEMA rejects custom/unsafe YAML tags
-    db = yaml.load(content, { schema: yaml.JSON_SCHEMA });
+    db = loadYamlDatabase(content, shortName);
   } catch (e) {
     error(`Failed to parse YAML: ${e.message}`);
     return;

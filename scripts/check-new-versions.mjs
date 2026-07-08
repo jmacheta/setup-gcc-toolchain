@@ -39,10 +39,8 @@ import { readFileSync, writeFileSync, appendFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createRequire } from "node:module";
-
-const require = createRequire(import.meta.url);
-const yaml = require("js-yaml");
+import { loadYamlDatabase } from "./lib/safe-yaml.mjs";
+import { resolveWithinRoot } from "./lib/safe-path.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, "..");
@@ -65,12 +63,27 @@ const ARM_DOWNLOADS_URL = "https://developer.arm.com/downloads/-/arm-gnu-toolcha
 // responses and scraped HTML — must resolve to one of these hosts over HTTPS.
 const TRUSTED_HOSTS = new Set(["api.github.com", "github.com", "objects.githubusercontent.com", "developer.arm.com"]);
 
+/**
+ * Throws unless `url` is a plain https:// URL to one of TRUSTED_HOSTS — no
+ * embedded credentials, no non-default port, no other scheme. Callers must
+ * call this as its own statement *before* fetching, not inline the fetch
+ * call as an argument to it, so the guard reads as an up-front rejection
+ * rather than something bolted onto the request expression.
+ */
 function assertTrustedUrl(url) {
   const parsed = new URL(url);
-  if (parsed.protocol !== "https:" || !TRUSTED_HOSTS.has(parsed.hostname)) {
-    throw new Error(`refusing to fetch untrusted URL: ${url}`);
+  if (parsed.protocol !== "https:") {
+    throw new Error(`refusing to fetch non-https URL: ${url}`);
   }
-  return url;
+  if (parsed.username || parsed.password) {
+    throw new Error(`refusing to fetch URL with embedded credentials: ${url}`);
+  }
+  if (parsed.port) {
+    throw new Error(`refusing to fetch URL with a non-default port: ${url}`);
+  }
+  if (!TRUSTED_HOSTS.has(parsed.hostname)) {
+    throw new Error(`refusing to fetch untrusted host "${parsed.hostname}": ${url}`);
+  }
 }
 const ARM_LINK_RE = /https:\/\/developer\.arm\.com\/-\/media\/Files\/downloads\/gnu\/([0-9]+\.[0-9]+\.rel[0-9]+)\/binrel\/[^"'\s]+\.(?:tar\.xz|zip)/g;
 const VERSION_RE = /(\d+)\.(\d+)\.(?:rel)?(\d+)/;
@@ -84,9 +97,11 @@ function parseVersion(str) {
 }
 
 function compareVersions(a, b) {
-  // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
-  for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] - b[i];
-  return 0;
+  const [aMajor, aMinor, aPatch] = a;
+  const [bMajor, bMinor, bPatch] = b;
+  if (aMajor !== bMajor) return aMajor - bMajor;
+  if (aMinor !== bMinor) return aMinor - bMinor;
+  return aPatch - bPatch;
 }
 
 function basenameOf(url) {
@@ -123,8 +138,8 @@ function sameSkeleton(a, b) {
 async function ghApi(url) {
   const headers = { "User-Agent": "setup-gcc-toolchain-version-check" };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
-  // nosemgrep: rules.lgpl.javascript.ssrf.rule-node-ssrf -- mitigated by assertTrustedUrl() above: only api.github.com/github.com/objects.githubusercontent.com/developer.arm.com over https are allowed
-  const res = await fetch(assertTrustedUrl(url), { headers });
+  assertTrustedUrl(url);
+  const res = await fetch(url, { headers });
   if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
   return res.json();
 }
@@ -161,7 +176,8 @@ let armCandidatesPromise = null;
 async function getArmCandidates() {
   if (!armCandidatesPromise) {
     armCandidatesPromise = (async () => {
-      const res = await fetch(assertTrustedUrl(ARM_DOWNLOADS_URL), { headers: { "User-Agent": "setup-gcc-toolchain-version-check" } });
+      assertTrustedUrl(ARM_DOWNLOADS_URL);
+      const res = await fetch(ARM_DOWNLOADS_URL, { headers: { "User-Agent": "setup-gcc-toolchain-version-check" } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const html = await res.text();
       const byVersion = new Map();
@@ -203,8 +219,8 @@ function findMatch(oldUrl, oldKey, minVersion, candidates) {
 // ── Checksum resolution ──────────────────────────────────────────────────────
 
 async function fetchText(url) {
-  // nosemgrep: rules.lgpl.javascript.ssrf.rule-node-ssrf -- mitigated by assertTrustedUrl() above
-  const res = await fetch(assertTrustedUrl(url), { headers: { "User-Agent": "setup-gcc-toolchain-version-check" } });
+  assertTrustedUrl(url);
+  const res = await fetch(url, { headers: { "User-Agent": "setup-gcc-toolchain-version-check" } });
   if (!res.ok) return null;
   return res.text();
 }
@@ -218,8 +234,8 @@ function findHashForFile(sumsText, targetFilename) {
 }
 
 async function downloadAndHash(url) {
-  // nosemgrep: rules.lgpl.javascript.ssrf.rule-node-ssrf -- mitigated by assertTrustedUrl() above
-  const res = await fetch(assertTrustedUrl(url));
+  assertTrustedUrl(url);
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`download failed: HTTP ${res.status}`);
   const buf = Buffer.from(await res.arrayBuffer());
   return createHash("sha256").update(buf).digest("hex");
@@ -290,11 +306,9 @@ const applied = []; // { file, vendor, toolchain, oldKey, newKey, url }
 const unresolved = []; // { vendor, toolchain, oldKey, sawNewer, reason }
 
 for (const file of DB_FILES) {
-  const filePath = path.join(REPO_ROOT, file);
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath is built from a fixed, hardcoded list, not external input
+  const filePath = resolveWithinRoot(REPO_ROOT, file);
   let text = readFileSync(filePath, "utf8");
-  // nosemgrep: rules.lgpl.javascript.eval.rule-yaml-deserialize -- mitigated: JSON_SCHEMA rejects custom/unsafe YAML tags
-  const db = yaml.load(text, { schema: yaml.JSON_SCHEMA });
+  const db = loadYamlDatabase(text, file);
   let fileChanged = false;
 
   for (const [vendor, toolchains] of Object.entries(db)) {
@@ -341,7 +355,8 @@ for (const file of DB_FILES) {
     }
   }
 
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath is built from a fixed, hardcoded list, not external input
+  // filePath went through resolveWithinRoot() above, which throws on any path outside REPO_ROOT
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
   if (fileChanged) writeFileSync(filePath, text);
 }
 

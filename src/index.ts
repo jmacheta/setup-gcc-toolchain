@@ -64,6 +64,22 @@ function assertSupportedScheme(url: string): void {
   }
 }
 
+/**
+ * Throws unless `target` resolves to a path actually inside `base`. Defense
+ * in depth: `toolchainName`/`resolvedVersion` are folded into `installDir`
+ * below, and while both are already validated against the YAML database's
+ * known keys before this point (resolveToolchain() throws on anything that
+ * isn't an exact match), this makes "never write outside the runner's temp
+ * dir" an enforced invariant rather than an implicit consequence of that
+ * upstream validation.
+ */
+function assertWithinDir(base: string, target: string): void {
+  const resolvedBase = path.resolve(base) + path.sep;
+  if (!(path.resolve(target) + path.sep).startsWith(resolvedBase)) {
+    throw new Error(`refusing to operate outside ${base}: ${target}`);
+  }
+}
+
 function tarFlags(archiveName: string): string {
   if (archiveName.endsWith(".tar.xz")) return "xJ";
   if (archiveName.endsWith(".tar.bz2")) return "xj";
@@ -71,9 +87,9 @@ function tarFlags(archiveName: string): string {
 }
 
 function findToolchainRoot(installDir: string): string {
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- installDir is built from RUNNER_TEMP, not external input
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- installDir is checked by assertWithinDir() in run() before this is called
   const entries = fs.readdirSync(installDir).filter((e) => {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- installDir is built from RUNNER_TEMP, not external input
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- installDir is checked by assertWithinDir() in run() before this is called
     const stat = fs.statSync(path.join(installDir, e));
     return stat.isDirectory();
   });
@@ -88,7 +104,7 @@ async function verifyOnPath(binPath: string, toolchainName: string): Promise<voi
   const ext = process.platform === "win32" ? ".exe" : "";
   const binaryPath = path.join(binPath, probe + ext);
 
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- binaryPath is built from binPath, not external input
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- binaryPath is derived from the already-validated installDir
   if (!fs.existsSync(binaryPath)) {
     // Non-fatal: log a warning but don't fail — binary name may differ
     core.warning(
@@ -146,7 +162,7 @@ async function installToolchain(
   await verifyChecksum(archivePath, entry.sha256);
 
   core.info(`Extracting to ${installDir}...`);
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- installDir is built from RUNNER_TEMP, not external input
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- installDir was just checked by assertWithinDir() above
   fs.mkdirSync(installDir, { recursive: true });
 
   if (archiveName.endsWith(".zip")) {
@@ -176,11 +192,9 @@ async function run(): Promise<void> {
   core.info(`URL: ${entry.url}`);
   assertSupportedScheme(entry.url);
 
-  const installDir = path.join(
-    process.env.RUNNER_TEMP ?? "/tmp",
-    "gcc-toolchain",
-    `${toolchainName}-${resolvedVersion}`
-  );
+  const runnerTemp = process.env.RUNNER_TEMP ?? "/tmp";
+  const installDir = path.join(runnerTemp, "gcc-toolchain", `${toolchainName}-${resolvedVersion}`);
+  assertWithinDir(runnerTemp, installDir);
   const cacheKey = `setup-gcc-toolchain-v1-${toolchainName}-${resolvedVersion}-${process.platform}-${process.arch}`;
 
   const cacheHit = await installToolchain(entry, installDir, cacheKey, enableCache);
@@ -188,7 +202,7 @@ async function run(): Promise<void> {
   const toolchainRoot = findToolchainRoot(installDir);
   const binPath = path.join(toolchainRoot, "bin");
 
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- binPath is built from RUNNER_TEMP, not external input
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- binPath is derived from the already-validated installDir
   if (!fs.existsSync(binPath)) {
     throw new Error(`bin/ not found under ${installDir}. Archive layout may be unexpected.`);
   }

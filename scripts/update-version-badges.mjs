@@ -17,10 +17,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createRequire } from "node:module";
-
-const require = createRequire(import.meta.url);
-const yaml = require("js-yaml");
+import { loadYamlDatabase } from "./lib/safe-yaml.mjs";
+import { resolveWithinRoot } from "./lib/safe-path.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, "..");
@@ -34,9 +32,9 @@ if (!GIST_ID || !GIST_TOKEN) {
 }
 
 const DB_FILES = [
-  path.join(REPO_ROOT, "toolchains-linux-x64.yml"),
-  path.join(REPO_ROOT, "toolchains-linux-arm64.yml"),
-  path.join(REPO_ROOT, "toolchains-windows-x64.yml"),
+  resolveWithinRoot(REPO_ROOT, "toolchains-linux-x64.yml"),
+  resolveWithinRoot(REPO_ROOT, "toolchains-linux-arm64.yml"),
+  resolveWithinRoot(REPO_ROOT, "toolchains-windows-x64.yml"),
 ];
 
 function comparePart(va, vb) {
@@ -61,9 +59,8 @@ function compareVersions(a, b) {
 const latest = new Map();
 
 for (const file of DB_FILES) {
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- file comes from the hardcoded DB_FILES list above
-  // nosemgrep: rules.lgpl.javascript.eval.rule-yaml-deserialize -- mitigated: JSON_SCHEMA rejects custom/unsafe YAML tags
-  const db = yaml.load(readFileSync(file, "utf8"), { schema: yaml.JSON_SCHEMA });
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- file is validated by resolveWithinRoot() above
+  const db = loadYamlDatabase(readFileSync(file, "utf8"), path.basename(file));
   for (const vendorDef of Object.values(db)) {
     for (const [toolchain, tcDef] of Object.entries(vendorDef)) {
       const versions = Object.keys(tcDef.versions ?? {});
@@ -78,18 +75,19 @@ for (const file of DB_FILES) {
 }
 
 // Build Gist files payload
-const files = {};
-for (const [toolchain, version] of latest) {
-  // eslint-disable-next-line security/detect-object-injection -- toolchain is a database key, not external input, and this must stay a plain object for JSON.stringify
-  files[`${toolchain}.json`] = {
-    content: JSON.stringify({
-      schemaVersion: 1,
-      label: toolchain,
-      message: version,
-      color: "informational",
-    }),
-  };
-}
+const files = Object.fromEntries(
+  [...latest].map(([toolchain, version]) => [
+    `${toolchain}.json`,
+    {
+      content: JSON.stringify({
+        schemaVersion: 1,
+        label: toolchain,
+        message: version,
+        color: "informational",
+      }),
+    },
+  ])
+);
 
 console.log(`Updating Gist ${GIST_ID} with ${Object.keys(files).length} toolchains...`);
 
@@ -111,5 +109,5 @@ if (!res.ok) {
 }
 
 const gist = await res.json();
-// eslint-disable-next-line xss/no-mixed-html -- this is a plain CLI log line, not HTML output
-console.log(`Done. Gist URL: ${gist.html_url}`);
+const gistUrl = gist.html_url;
+console.log(`Done. Gist URL: ${gistUrl}`);
