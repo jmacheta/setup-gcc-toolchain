@@ -11,7 +11,8 @@
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
     "validate": "node scripts/validate-toolchains.mjs --no-network",
-    "validate:full": "node scripts/validate-toolchains.mjs"
+    "validate:full": "node scripts/validate-toolchains.mjs",
+    "check-versions": "node scripts/check-new-versions.mjs"
   },
   "keywords": [
     "gcc",
