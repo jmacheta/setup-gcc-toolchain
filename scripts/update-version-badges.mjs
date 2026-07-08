@@ -62,6 +62,7 @@ const latest = new Map();
 
 for (const file of DB_FILES) {
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- file comes from the hardcoded DB_FILES list above
+  // nosemgrep: rules.lgpl.javascript.eval.rule-yaml-deserialize -- js-yaml 4+ load() is the safe function (safeLoad/safeDump were removed because the old unsafe constructors need an explicit opt-in Schema); JSON_SCHEMA further restricts to plain JSON-shaped values
   const db = yaml.load(readFileSync(file, "utf8"), { schema: yaml.JSON_SCHEMA });
   for (const vendorDef of Object.values(db)) {
     for (const [toolchain, tcDef] of Object.entries(vendorDef)) {
@@ -111,5 +112,6 @@ if (!res.ok) {
 }
 
 const gist = await res.json();
+// eslint-disable-next-line xss/no-mixed-html -- this is a plain CLI log line to stdout, not HTML output; the rule keys off the "html_url" property name, not any real XSS sink
 const gistUrl = gist.html_url;
 console.log(`Done. Gist URL: ${gistUrl}`);

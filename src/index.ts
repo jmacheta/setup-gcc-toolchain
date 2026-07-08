@@ -16,7 +16,7 @@ import { resolveToolchain, ToolchainEntry } from "./toolchains.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// eslint-disable-next-line security-node/detect-unhandled-async-errors -- errors thrown here propagate to the top-level `run().catch()` handler
+/* eslint-disable security-node/detect-unhandled-async-errors -- errors anywhere in this function propagate to the top-level `run().catch()` handler; stream errors specifically are wired to `reject` below */
 async function verifyChecksum(
   filePath: string,
   expectedSha256: string
@@ -32,7 +32,6 @@ async function verifyChecksum(
   const hash = crypto.createHash("sha256");
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath comes from tc.downloadTool(), not external input
   const stream = fs.createReadStream(filePath);
-  // eslint-disable-next-line security-node/detect-unhandled-async-errors -- stream errors are wired to `reject` below
   await new Promise<void>((resolve, reject) => {
     stream.on("data", (chunk) => hash.update(chunk));
     stream.on("end", resolve);
@@ -47,6 +46,7 @@ async function verifyChecksum(
       `  actual:   ${actual}`
     );
   }
+  /* eslint-enable security-node/detect-unhandled-async-errors */
 }
 
 function assertSupportedScheme(url: string): void {

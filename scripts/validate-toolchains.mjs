@@ -96,9 +96,11 @@ async function pool(tasks, limit) {
   const results = new Map();
   let idx = 0;
   async function worker() {
+    // eslint-disable-next-line security-node/detect-unhandled-async-errors -- the await below is wrapped in try/catch, which rethrows through the Promise.all below
     while (idx < tasks.length) {
       const i = idx++;
       try {
+        // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
         results.set(i, await tasks[i]());
       } catch (err) {
         throw new Error(`task ${i} failed: ${err.message}`, { cause: err });
@@ -188,6 +190,7 @@ async function validateFile(filePath) {
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath comes from a hardcoded list or an operator-supplied CLI flag
     const content = readFileSync(filePath, "utf8");
+    // nosemgrep: rules.lgpl.javascript.eval.rule-yaml-deserialize -- js-yaml 4+ load() is the safe function (safeLoad/safeDump were removed because the old unsafe constructors need an explicit opt-in Schema); JSON_SCHEMA further restricts to plain JSON-shaped values
     db = yaml.load(content, { schema: yaml.JSON_SCHEMA });
   } catch (e) {
     error(`Failed to parse YAML: ${e.message}`);

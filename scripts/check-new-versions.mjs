@@ -141,6 +141,7 @@ async function ghApi(url) {
   const headers = { "User-Agent": "setup-gcc-toolchain-version-check" };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   assertTrustedUrl(url);
+  // nosemgrep: rules.lgpl.javascript.ssrf.rule-node-ssrf -- mitigated by assertTrustedUrl() above (host allowlist, https-only, no credentials/non-default port)
   const res = await fetch(url, { headers });
   if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
   return res.json();
@@ -222,6 +223,7 @@ function findMatch(oldUrl, oldKey, minVersion, candidates) {
 
 async function fetchText(url) {
   assertTrustedUrl(url);
+  // nosemgrep: rules.lgpl.javascript.ssrf.rule-node-ssrf -- mitigated by assertTrustedUrl() above
   const res = await fetch(url, { headers: { "User-Agent": "setup-gcc-toolchain-version-check" } });
   if (!res.ok) return null;
   return res.text();
@@ -237,6 +239,7 @@ function findHashForFile(sumsText, targetFilename) {
 
 async function downloadAndHash(url) {
   assertTrustedUrl(url);
+  // nosemgrep: rules.lgpl.javascript.ssrf.rule-node-ssrf -- mitigated by assertTrustedUrl() above
   const res = await fetch(url);
   if (!res.ok) throw new Error(`download failed: HTTP ${res.status}`);
   const buf = Buffer.from(await res.arrayBuffer());
@@ -311,6 +314,7 @@ for (const file of DB_FILES) {
   const filePath = path.join(REPO_ROOT, file);
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath is built from a fixed, hardcoded list, not external input
   let text = readFileSync(filePath, "utf8");
+  // nosemgrep: rules.lgpl.javascript.eval.rule-yaml-deserialize -- js-yaml 4+ load() is the safe function (safeLoad/safeDump were removed because the old unsafe constructors need an explicit opt-in Schema); JSON_SCHEMA further restricts to plain JSON-shaped values
   const db = yaml.load(text, { schema: yaml.JSON_SCHEMA });
   let fileChanged = false;
 

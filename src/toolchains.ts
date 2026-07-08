@@ -61,6 +61,7 @@ export function loadDatabase(repoRoot: string, platform?: RunnerPlatform): Toolc
     );
   }
   const dbPath = resolveWithinRoot(repoRoot, dbFile);
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- dbPath is checked by resolveWithinRoot() above
   const content = fs.readFileSync(dbPath, "utf8");
   if (content.length > MAX_YAML_BYTES) {
     throw new Error(`${dbFile}: refusing to parse ${content.length} bytes of YAML (limit ${MAX_YAML_BYTES})`);
