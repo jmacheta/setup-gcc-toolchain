@@ -12,13 +12,9 @@ export interface ToolchainDef {
   versions: Record<string, ToolchainEntry>;
 }
 
-export interface VendorDef {
-  [toolchain: string]: ToolchainDef;
-}
+export type VendorDef = Record<string, ToolchainDef>;
 
-export interface ToolchainDatabase {
-  [vendor: string]: VendorDef;
-}
+export type ToolchainDatabase = Record<string, VendorDef>;
 
 export type RunnerPlatform =
   | "linux-x64"
@@ -32,113 +28,146 @@ export function detectPlatform(): RunnerPlatform {
   return `${os}-${arch}` as RunnerPlatform;
 }
 
-const DB_FILES: Partial<Record<RunnerPlatform, string>> = {
-  "linux-x64": "toolchains-linux-x64.yml",
-  "linux-arm64": "toolchains-linux-arm64.yml",
-  "windows-x64": "toolchains-windows-x64.yml",
-};
+const DB_FILES: ReadonlyMap<RunnerPlatform, string> = new Map([
+  ["linux-x64", "toolchains-linux-x64.yml"],
+  ["linux-arm64", "toolchains-linux-arm64.yml"],
+  ["windows-x64", "toolchains-windows-x64.yml"],
+]);
+
+const MAX_YAML_BYTES = 2 * 1024 * 1024; // 2 MiB — our largest database file today is ~45 KB
+
+/**
+ * Resolves `relativeName` against `root` and verifies the result is still
+ * inside `root` — a path-traversal guard, since `root` + a hardcoded
+ * filename is otherwise indistinguishable from arbitrary path input to a
+ * static analyzer (and a defensive check costs nothing here).
+ */
+function resolveWithinRoot(root: string, relativeName: string): string {
+  const resolvedRoot = path.resolve(root) + path.sep;
+  const resolved = path.resolve(root, relativeName);
+  if (!resolved.startsWith(resolvedRoot)) {
+    throw new Error(`refusing to access path outside repo root: ${relativeName}`);
+  }
+  return resolved;
+}
 
 export function loadDatabase(repoRoot: string, platform?: RunnerPlatform): ToolchainDatabase {
   const plat = platform ?? detectPlatform();
-  const dbFile = DB_FILES[plat];
+  const dbFile = DB_FILES.get(plat);
   if (!dbFile) {
     throw new Error(
       `No toolchain database available for runner platform "${plat}".\n` +
-      `Supported platforms: ${Object.keys(DB_FILES).join(", ")}`
+      `Supported platforms: ${[...DB_FILES.keys()].join(", ")}`
     );
   }
-  const dbPath = path.join(repoRoot, dbFile);
+  const dbPath = resolveWithinRoot(repoRoot, dbFile);
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- dbPath is checked by resolveWithinRoot() above
   const content = fs.readFileSync(dbPath, "utf8");
-  return yaml.load(content) as ToolchainDatabase;
+  if (content.length > MAX_YAML_BYTES) {
+    throw new Error(`${dbFile}: refusing to parse ${content.length} bytes of YAML (limit ${MAX_YAML_BYTES})`);
+  }
+  // Restricted schema: the YAML database is trusted repo content, but only
+  // plain JSON-shaped values are ever expected — reject custom/unsafe tags.
+  // js-yaml 4+ removed safeLoad/safeDump: plain `load()` is the safe function
+  // now (the old unsafe constructors require an explicit opt-in Schema).
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment -- this file's own `tsc --noEmit --strict` passes cleanly; js-yaml ships its own types (see @types/js-yaml), Codacy's hosted ESLint just doesn't resolve them
+  const parsed: unknown = yaml.load(content, { schema: yaml.JSON_SCHEMA });
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error(`${dbFile}: expected the document root to be a mapping, got ${Array.isArray(parsed) ? "an array" : typeof parsed}`);
+  }
+  return parsed as ToolchainDatabase;
 }
 
-export function resolveToolchain(
-  repoRoot: string,
-  toolchainName: string,
-  requestedVersion: string,
-  platform?: RunnerPlatform,
-  requestedVendor?: string
-): ToolchainEntry {
-  const db = loadDatabase(repoRoot, platform);
+interface VendorMatch {
+  vendor: string;
+  def: ToolchainDef;
+}
 
-  // Collect matching vendor defs, filtered by vendor if specified
-  const matches: { vendor: string; def: ToolchainDef }[] = [];
+function findVendorMatches(db: ToolchainDatabase, toolchainName: string, requestedVendor?: string): VendorMatch[] {
+  const matches: VendorMatch[] = [];
   for (const [vendor, vendorDef] of Object.entries(db)) {
-    if (toolchainName in vendorDef) {
-      if (requestedVendor === undefined || vendor === requestedVendor) {
-        matches.push({ vendor, def: vendorDef[toolchainName] });
-      }
-    }
+    if (requestedVendor !== undefined && vendor !== requestedVendor) continue;
+    const found = Object.entries(vendorDef).find(([name]) => name === toolchainName);
+    if (found) matches.push({ vendor, def: found[1] });
   }
+  return matches;
+}
 
-  if (matches.length === 0) {
-    if (requestedVendor !== undefined) {
-      throw new Error(
-        `Toolchain "${toolchainName}" not found for vendor "${requestedVendor}" on this platform.\n` +
-        `Available vendors for this toolchain: ${Object.entries(db)
-          .filter(([, vd]) => toolchainName in vd)
-          .map(([v]) => v)
-          .join(", ") || "none"
-        }`
-      );
-    }
-    const available = Object.values(db).flatMap((v) => Object.keys(v)).sort();
+function throwNoMatches(db: ToolchainDatabase, toolchainName: string, requestedVendor?: string): never {
+  if (requestedVendor !== undefined) {
     throw new Error(
-      `Toolchain "${toolchainName}" not found for this platform.\n` +
-      `Available: ${available.join(", ")}`
+      `Toolchain "${toolchainName}" not found for vendor "${requestedVendor}" on this platform.\n` +
+      `Available vendors for this toolchain: ${Object.entries(db)
+        .filter(([, vd]) => toolchainName in vd)
+        .map(([v]) => v)
+        .join(", ") || "none"
+      }`
     );
   }
+  const available = Object.values(db).flatMap((v) => Object.keys(v)).sort();
+  throw new Error(
+    `Toolchain "${toolchainName}" not found for this platform.\n` +
+    `Available: ${available.join(", ")}`
+  );
+}
 
-  // For a specific version, check for conflicts across vendors when no vendor was specified
-  if (requestedVendor === undefined && requestedVersion !== "latest") {
-    const providingVendors = matches
-      .filter(({ def }) => requestedVersion in def.versions)
-      .map(({ vendor }) => vendor);
-    if (providingVendors.length > 1) {
-      throw new Error(
-        `Version "${requestedVersion}" of toolchain "${toolchainName}" is provided by multiple vendors: ${providingVendors.join(", ")}.\n` +
-        `Specify a vendor explicitly, e.g. "${providingVendors[0]}/${toolchainName}".`
-      );
-    }
-  }
-
-  // For "latest" with no vendor, check for conflict at the top version across vendors
-  if (requestedVendor === undefined && requestedVersion === "latest" && matches.length > 1) {
-    const topPerVendor = matches.map(({ vendor, def }) => {
-      const top = Object.keys(def.versions).sort((a, b) => compareVersions(b, a))[0];
-      return { vendor, version: top };
-    });
-    const topVersion = topPerVendor.reduce((best, cur) =>
-      compareVersions(cur.version, best.version) > 0 ? cur : best
+function assertNoVersionConflict(matches: VendorMatch[], toolchainName: string, requestedVersion: string): void {
+  const providingVendors = matches
+    .filter(({ def }) => requestedVersion in def.versions)
+    .map(({ vendor }) => vendor);
+  if (providingVendors.length > 1) {
+    throw new Error(
+      `Version "${requestedVersion}" of toolchain "${toolchainName}" is provided by multiple vendors: ${providingVendors.join(", ")}.\n` +
+      `Specify a vendor explicitly, e.g. "${providingVendors[0]}/${toolchainName}".`
     );
-    const tied = topPerVendor.filter((v) => v.version === topVersion.version);
-    if (tied.length > 1) {
-      const vendors = tied.map((v) => v.vendor).join(", ");
-      throw new Error(
-        `Toolchain "${toolchainName}" latest version "${topVersion.version}" is provided by multiple vendors: ${vendors}.\n` +
-        `Specify a vendor explicitly, e.g. "${tied[0].vendor}/${toolchainName}".`
-      );
-    }
   }
+}
 
-  // Resolve: for "latest" pick highest version across all matching vendors
-  if (requestedVersion === "latest") {
-    let bestEntry: ToolchainEntry | undefined;
-    let bestVersion = "";
-    for (const { def } of matches) {
-      for (const [ver, entry] of Object.entries(def.versions)) {
-        if (!bestVersion || compareVersions(ver, bestVersion) > 0) {
-          bestVersion = ver;
-          bestEntry = entry;
-        }
+function assertNoLatestConflict(matches: VendorMatch[], toolchainName: string): void {
+  if (matches.length <= 1) return;
+  const topPerVendor = matches.map(({ vendor, def }) => {
+    const top = Object.keys(def.versions).sort((a, b) => compareVersions(b, a))[0];
+    return { vendor, version: top };
+  });
+  const topVersion = topPerVendor.reduce((best, cur) =>
+    compareVersions(cur.version, best.version) > 0 ? cur : best
+  );
+  const tied = topPerVendor.filter((v) => v.version === topVersion.version);
+  if (tied.length > 1) {
+    const vendors = tied.map((v) => v.vendor).join(", ");
+    throw new Error(
+      `Toolchain "${toolchainName}" latest version "${topVersion.version}" is provided by multiple vendors: ${vendors}.\n` +
+      `Specify a vendor explicitly, e.g. "${tied[0].vendor}/${toolchainName}".`
+    );
+  }
+}
+
+function pickLatest(matches: VendorMatch[], toolchainName: string): ToolchainEntry {
+  let bestEntry: ToolchainEntry | undefined;
+  let bestVersion = "";
+  for (const { def } of matches) {
+    for (const [ver, entry] of Object.entries(def.versions)) {
+      if (!bestVersion || compareVersions(ver, bestVersion) > 0) {
+        bestVersion = ver;
+        bestEntry = entry;
       }
     }
-    return { url: bestEntry!.url, sha256: bestEntry!.sha256 ?? "" };
   }
+  if (!bestEntry) {
+    throw new Error(`Toolchain "${toolchainName}" has no versions available for this platform.`);
+  }
+  // The YAML database is cast to ToolchainDatabase without runtime validation,
+  // so a malformed entry could still be missing sha256 despite the type.
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  return { url: bestEntry.url, sha256: bestEntry.sha256 ?? "" };
+}
 
+function pickVersion(matches: VendorMatch[], toolchainName: string, requestedVersion: string): ToolchainEntry {
   for (const { def } of matches) {
-    if (requestedVersion in def.versions) {
-      const entry = def.versions[requestedVersion];
+    const found = Object.entries(def.versions).find(([ver]) => ver === requestedVersion);
+    if (found) {
+      const entry = found[1];
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- see pickLatest
       return { url: entry.url, sha256: entry.sha256 ?? "" };
     }
   }
@@ -152,21 +181,46 @@ export function resolveToolchain(
   );
 }
 
-export function compareVersions(a: string, b: string): number {
-  const splitVer = (v: string) => v.split(/[.\-_]/);
-  const pa = splitVer(a);
-  const pb = splitVer(b);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const sa = pa[i] ?? "0";
-    const sb = pb[i] ?? "0";
-    const na = Number(sa);
-    const nb = Number(sb);
-    const bothNumeric = sa !== "" && sb !== "" && !isNaN(na) && !isNaN(nb);
-    if (bothNumeric) {
-      if (na !== nb) return na - nb;
-    } else if (sa !== sb) {
-      return sa < sb ? -1 : 1;
+export function resolveToolchain(
+  repoRoot: string,
+  toolchainName: string,
+  requestedVersion: string,
+  platform?: RunnerPlatform,
+  requestedVendor?: string
+): ToolchainEntry {
+  const db = loadDatabase(repoRoot, platform);
+  const matches = findVendorMatches(db, toolchainName, requestedVendor);
+  if (matches.length === 0) throwNoMatches(db, toolchainName, requestedVendor);
+
+  if (requestedVendor === undefined) {
+    if (requestedVersion === "latest") {
+      assertNoLatestConflict(matches, toolchainName);
+    } else {
+      assertNoVersionConflict(matches, toolchainName, requestedVersion);
     }
   }
+
+  return requestedVersion === "latest"
+    ? pickLatest(matches, toolchainName)
+    : pickVersion(matches, toolchainName, requestedVersion);
+}
+
+export function compareVersions(a: string, b: string): number {
+  const pa = a.split(/[.\-_]/);
+  const pb = b.split(/[.\-_]/);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
+    const cmp = compareVersionPart(pa[i] ?? "0", pb[i] ?? "0");
+    if (cmp !== 0) return cmp;
+  }
   return 0;
+}
+
+function compareVersionPart(sa: string, sb: string): number {
+  const na = Number(sa);
+  const nb = Number(sb);
+  const bothNumeric = sa !== "" && sb !== "" && !isNaN(na) && !isNaN(nb);
+  if (bothNumeric) return na - nb;
+  if (sa === sb) return 0;
+  return sa < sb ? -1 : 1;
 }

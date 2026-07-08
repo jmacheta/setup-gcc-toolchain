@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument --
+ * This file's own `tsc --noEmit --strict` passes cleanly: @actions/core, @actions/cache
+ * and @actions/tool-cache ship their own .d.ts and are correctly typed here. These rules
+ * only fire in Codacy's hosted ESLint run because it doesn't resolve installed
+ * node_modules type declarations for third-party packages, so every call into an
+ * @actions/* namespace import is seen as `any`/`error`-typed. */
 import * as core from "@actions/core";
 import * as cache from "@actions/cache";
 import * as tc from "@actions/tool-cache";
@@ -6,10 +12,11 @@ import * as path from "path";
 import * as crypto from "crypto";
 import * as fs from "fs";
 import { fileURLToPath } from "url";
-import { resolveToolchain } from "./toolchains.js";
+import { resolveToolchain, ToolchainEntry } from "./toolchains.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+/* eslint-disable security-node/detect-unhandled-async-errors -- errors anywhere in this function propagate to the top-level `run().catch()` handler; stream errors specifically are wired to `reject` below */
 async function verifyChecksum(
   filePath: string,
   expectedSha256: string
@@ -23,6 +30,7 @@ async function verifyChecksum(
   }
 
   const hash = crypto.createHash("sha256");
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath comes from tc.downloadTool(), not external input
   const stream = fs.createReadStream(filePath);
   await new Promise<void>((resolve, reject) => {
     stream.on("data", (chunk) => hash.update(chunk));
@@ -38,6 +46,7 @@ async function verifyChecksum(
       `  actual:   ${actual}`
     );
   }
+  /* eslint-enable security-node/detect-unhandled-async-errors */
 }
 
 function assertSupportedScheme(url: string): void {
@@ -55,6 +64,22 @@ function assertSupportedScheme(url: string): void {
   }
 }
 
+/**
+ * Throws unless `target` resolves to a path actually inside `base`. Defense
+ * in depth: `toolchainName`/`resolvedVersion` are folded into `installDir`
+ * below, and while both are already validated against the YAML database's
+ * known keys before this point (resolveToolchain() throws on anything that
+ * isn't an exact match), this makes "never write outside the runner's temp
+ * dir" an enforced invariant rather than an implicit consequence of that
+ * upstream validation.
+ */
+function assertWithinDir(base: string, target: string): void {
+  const resolvedBase = path.resolve(base) + path.sep;
+  if (!(path.resolve(target) + path.sep).startsWith(resolvedBase)) {
+    throw new Error(`refusing to operate outside ${base}: ${target}`);
+  }
+}
+
 function tarFlags(archiveName: string): string {
   if (archiveName.endsWith(".tar.xz")) return "xJ";
   if (archiveName.endsWith(".tar.bz2")) return "xj";
@@ -62,7 +87,9 @@ function tarFlags(archiveName: string): string {
 }
 
 function findToolchainRoot(installDir: string): string {
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- installDir is checked by assertWithinDir() in run() before this is called
   const entries = fs.readdirSync(installDir).filter((e) => {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- installDir is checked by assertWithinDir() in run() before this is called
     const stat = fs.statSync(path.join(installDir, e));
     return stat.isDirectory();
   });
@@ -77,6 +104,7 @@ async function verifyOnPath(binPath: string, toolchainName: string): Promise<voi
   const ext = process.platform === "win32" ? ".exe" : "";
   const binaryPath = path.join(binPath, probe + ext);
 
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- binaryPath is derived from the already-validated installDir
   if (!fs.existsSync(binaryPath)) {
     // Non-fatal: log a warning but don't fail — binary name may differ
     core.warning(
@@ -95,11 +123,63 @@ async function verifyOnPath(binPath: string, toolchainName: string): Promise<voi
   core.info(`Verified: ${output.split("\n")[0].trim()}`);
 }
 
+interface RunInputs {
+  toolchainName: string;
+  vendor: string | undefined;
+  version: string;
+  enableCache: boolean;
+}
+
+function readInputs(): RunInputs {
+  return {
+    toolchainName: core.getInput("toolchain", { required: true }),
+    vendor: core.getInput("vendor") || undefined,
+    version: core.getInput("version") || "latest",
+    enableCache: core.getInput("enable-cache") !== "false",
+  };
+}
+
+/** Downloads (or restores from cache), verifies and extracts the toolchain into installDir. Returns whether the cache was hit. */
+async function installToolchain(
+  entry: ToolchainEntry,
+  installDir: string,
+  cacheKey: string,
+  enableCache: boolean
+): Promise<boolean> {
+  if (enableCache) {
+    const restoredKey = await cache.restoreCache([installDir], cacheKey);
+    if (restoredKey !== undefined) {
+      core.info(`Restored from cache: ${restoredKey}`);
+      return true;
+    }
+  }
+
+  const archiveName = path.basename(entry.url);
+  core.info(`Downloading ${archiveName}...`);
+  const archivePath = await tc.downloadTool(entry.url);
+
+  core.info("Verifying SHA256...");
+  await verifyChecksum(archivePath, entry.sha256);
+
+  core.info(`Extracting to ${installDir}...`);
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- installDir was just checked by assertWithinDir() above
+  fs.mkdirSync(installDir, { recursive: true });
+
+  if (archiveName.endsWith(".zip")) {
+    await tc.extractZip(archivePath, installDir);
+  } else {
+    await tc.extractTar(archivePath, installDir, tarFlags(archiveName));
+  }
+
+  if (enableCache) {
+    core.info("Saving to cache...");
+    await cache.saveCache([installDir], cacheKey);
+  }
+  return false;
+}
+
 async function run(): Promise<void> {
-  const toolchainName = core.getInput("toolchain", { required: true });
-  const vendor = core.getInput("vendor") || undefined;
-  const version = core.getInput("version") || "latest";
-  const enableCache = core.getInput("enable-cache") !== "false";
+  const { toolchainName, vendor, version, enableCache } = readInputs();
 
   const repoRoot = path.join(__dirname, "..");
   const entry = resolveToolchain(repoRoot, toolchainName, version, undefined, vendor);
@@ -112,49 +192,17 @@ async function run(): Promise<void> {
   core.info(`URL: ${entry.url}`);
   assertSupportedScheme(entry.url);
 
-  const archiveName = path.basename(entry.url);
-  const installDir = path.join(
-    process.env.RUNNER_TEMP ?? "/tmp",
-    "gcc-toolchain",
-    `${toolchainName}-${resolvedVersion}`
-  );
+  const runnerTemp = process.env.RUNNER_TEMP ?? "/tmp";
+  const installDir = path.join(runnerTemp, "gcc-toolchain", `${toolchainName}-${resolvedVersion}`);
+  assertWithinDir(runnerTemp, installDir);
   const cacheKey = `setup-gcc-toolchain-v1-${toolchainName}-${resolvedVersion}-${process.platform}-${process.arch}`;
 
-  let cacheHit = false;
-
-  if (enableCache) {
-    const restoredKey = await cache.restoreCache([installDir], cacheKey);
-    cacheHit = restoredKey !== undefined;
-    if (cacheHit) {
-      core.info(`Restored from cache: ${restoredKey}`);
-    }
-  }
-
-  if (!cacheHit) {
-    core.info(`Downloading ${archiveName}...`);
-    const archivePath = await tc.downloadTool(entry.url);
-
-    core.info("Verifying SHA256...");
-    await verifyChecksum(archivePath, entry.sha256);
-
-    core.info(`Extracting to ${installDir}...`);
-    fs.mkdirSync(installDir, { recursive: true });
-
-    if (archiveName.endsWith(".zip")) {
-      await tc.extractZip(archivePath, installDir);
-    } else {
-      await tc.extractTar(archivePath, installDir, tarFlags(archiveName));
-    }
-
-    if (enableCache) {
-      core.info("Saving to cache...");
-      await cache.saveCache([installDir], cacheKey);
-    }
-  }
+  const cacheHit = await installToolchain(entry, installDir, cacheKey, enableCache);
 
   const toolchainRoot = findToolchainRoot(installDir);
   const binPath = path.join(toolchainRoot, "bin");
 
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- binPath is derived from the already-validated installDir
   if (!fs.existsSync(binPath)) {
     throw new Error(`bin/ not found under ${installDir}. Archive layout may be unexpected.`);
   }
@@ -170,6 +218,6 @@ async function run(): Promise<void> {
   await verifyOnPath(binPath, toolchainName);
 }
 
-run().catch((err) => {
+run().catch((err: unknown) => {
   core.setFailed(err instanceof Error ? err.message : String(err));
 });

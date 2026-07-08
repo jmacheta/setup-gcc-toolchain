@@ -1,0 +1,78 @@
+name: Check for new toolchain versions
+
+on:
+  schedule:
+    - cron: "0 12 * * 1"  # 12:00 UTC every Monday
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  check-new-versions:
+    name: Check vendors for newer releases
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check vendors and patch database
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/check-new-versions.mjs --out new-versions-report.md
+
+      - name: Open or update tracking issue
+        id: issue
+        if: steps.check.outputs.updated == 'true' || steps.check.outputs.unresolved == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "in:title \"New upstream toolchain versions\"" \
+            --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body-file new-versions-report.md
+            echo "number=$existing" >> "$GITHUB_OUTPUT"
+          else
+            url=$(gh issue create --repo "$GITHUB_REPOSITORY" \
+              --title "New upstream toolchain versions available" \
+              --body-file new-versions-report.md)
+            echo "number=${url##*/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open or update pull request
+        if: steps.check.outputs.updated == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="auto/toolchain-version-updates"
+          {
+            echo "Closes #${{ steps.issue.outputs.number }}"
+            echo
+            cat new-versions-report.md
+          } > pr-body.md
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add toolchains-linux-x64.yml toolchains-linux-arm64.yml toolchains-windows-x64.yml
+          git commit -m "Update toolchain database with newer upstream releases"
+          git push --force origin "$branch"
+
+          existing_pr=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$branch" --state open --json number --jq '.[0].number')
+          if [ -n "$existing_pr" ]; then
+            gh pr edit "$existing_pr" --repo "$GITHUB_REPOSITORY" --body-file pr-body.md
+          else
+            gh pr create --repo "$GITHUB_REPOSITORY" --head "$branch" --base main \
+              --title "Update toolchain database with newer upstream releases" \
+              --body-file pr-body.md
+          fi

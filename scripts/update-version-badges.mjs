@@ -39,48 +39,58 @@ const DB_FILES = [
   path.join(REPO_ROOT, "toolchains-windows-x64.yml"),
 ];
 
+function comparePart(va, vb) {
+  if (va < vb) return -1;
+  if (va > vb) return 1;
+  return 0;
+}
+
 function compareVersions(a, b) {
   const split = (v) => v.split(/[.\-_]/).map((p) => (isNaN(Number(p)) ? p : Number(p)));
   const pa = split(a);
   const pb = split(b);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const va = pa[i] ?? 0;
-    const vb = pb[i] ?? 0;
-    if (va < vb) return -1;
-    if (va > vb) return 1;
+    // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
+    const cmp = comparePart(pa[i] ?? 0, pb[i] ?? 0);
+    if (cmp !== 0) return cmp;
   }
   return 0;
 }
 
 // toolchain -> latest version string
-const latest = {};
+const latest = new Map();
 
 for (const file of DB_FILES) {
-  const db = yaml.load(readFileSync(file, "utf8"));
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- file comes from the hardcoded DB_FILES list above
+  // nosemgrep: rules.lgpl.javascript.eval.rule-yaml-deserialize -- js-yaml 4+ load() is the safe function (safeLoad/safeDump were removed because the old unsafe constructors need an explicit opt-in Schema); JSON_SCHEMA further restricts to plain JSON-shaped values
+  const db = yaml.load(readFileSync(file, "utf8"), { schema: yaml.JSON_SCHEMA });
   for (const vendorDef of Object.values(db)) {
     for (const [toolchain, tcDef] of Object.entries(vendorDef)) {
       const versions = Object.keys(tcDef.versions ?? {});
       if (versions.length === 0) continue;
       const top = versions.sort((a, b) => compareVersions(b, a))[0];
-      if (!latest[toolchain] || compareVersions(top, latest[toolchain]) > 0) {
-        latest[toolchain] = top;
+      const current = latest.get(toolchain);
+      if (!current || compareVersions(top, current) > 0) {
+        latest.set(toolchain, top);
       }
     }
   }
 }
 
 // Build Gist files payload
-const files = {};
-for (const [toolchain, version] of Object.entries(latest)) {
-  files[`${toolchain}.json`] = {
-    content: JSON.stringify({
-      schemaVersion: 1,
-      label: toolchain,
-      message: version,
-      color: "informational",
-    }),
-  };
-}
+const files = Object.fromEntries(
+  [...latest].map(([toolchain, version]) => [
+    `${toolchain}.json`,
+    {
+      content: JSON.stringify({
+        schemaVersion: 1,
+        label: toolchain,
+        message: version,
+        color: "informational",
+      }),
+    },
+  ])
+);
 
 console.log(`Updating Gist ${GIST_ID} with ${Object.keys(files).length} toolchains...`);
 
@@ -102,4 +112,6 @@ if (!res.ok) {
 }
 
 const gist = await res.json();
-console.log(`Done. Gist URL: ${gist.html_url}`);
+// eslint-disable-next-line xss/no-mixed-html -- this is a plain CLI log line to stdout, not HTML output; the rule keys off the "html_url" property name, not any real XSS sink
+const gistUrl = gist.html_url;
+console.log(`Done. Gist URL: ${gistUrl}`);
