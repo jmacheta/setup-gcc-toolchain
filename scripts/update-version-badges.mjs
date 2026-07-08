@@ -17,8 +17,10 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadYamlDatabase } from "./lib/safe-yaml.mjs";
-import { resolveWithinRoot } from "./lib/safe-path.mjs";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const yaml = require("js-yaml");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, "..");
@@ -32,9 +34,9 @@ if (!GIST_ID || !GIST_TOKEN) {
 }
 
 const DB_FILES = [
-  resolveWithinRoot(REPO_ROOT, "toolchains-linux-x64.yml"),
-  resolveWithinRoot(REPO_ROOT, "toolchains-linux-arm64.yml"),
-  resolveWithinRoot(REPO_ROOT, "toolchains-windows-x64.yml"),
+  path.join(REPO_ROOT, "toolchains-linux-x64.yml"),
+  path.join(REPO_ROOT, "toolchains-linux-arm64.yml"),
+  path.join(REPO_ROOT, "toolchains-windows-x64.yml"),
 ];
 
 function comparePart(va, vb) {
@@ -59,8 +61,8 @@ function compareVersions(a, b) {
 const latest = new Map();
 
 for (const file of DB_FILES) {
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- file is validated by resolveWithinRoot() above
-  const db = loadYamlDatabase(readFileSync(file, "utf8"), path.basename(file));
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- file comes from the hardcoded DB_FILES list above
+  const db = yaml.load(readFileSync(file, "utf8"), { schema: yaml.JSON_SCHEMA });
   for (const vendorDef of Object.values(db)) {
     for (const [toolchain, tcDef] of Object.entries(vendorDef)) {
       const versions = Object.keys(tcDef.versions ?? {});

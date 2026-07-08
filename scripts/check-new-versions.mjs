@@ -39,8 +39,10 @@ import { readFileSync, writeFileSync, appendFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadYamlDatabase } from "./lib/safe-yaml.mjs";
-import { resolveWithinRoot } from "./lib/safe-path.mjs";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const yaml = require("js-yaml");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, "..");
@@ -306,9 +308,10 @@ const applied = []; // { file, vendor, toolchain, oldKey, newKey, url }
 const unresolved = []; // { vendor, toolchain, oldKey, sawNewer, reason }
 
 for (const file of DB_FILES) {
-  const filePath = resolveWithinRoot(REPO_ROOT, file);
+  const filePath = path.join(REPO_ROOT, file);
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath is built from a fixed, hardcoded list, not external input
   let text = readFileSync(filePath, "utf8");
-  const db = loadYamlDatabase(text, file);
+  const db = yaml.load(text, { schema: yaml.JSON_SCHEMA });
   let fileChanged = false;
 
   for (const [vendor, toolchains] of Object.entries(db)) {
@@ -355,8 +358,7 @@ for (const file of DB_FILES) {
     }
   }
 
-  // filePath went through resolveWithinRoot() above, which throws on any path outside REPO_ROOT
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath is built from a fixed, hardcoded list, not external input
   if (fileChanged) writeFileSync(filePath, text);
 }
 
