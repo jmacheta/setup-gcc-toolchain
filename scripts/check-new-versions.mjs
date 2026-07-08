@@ -13,17 +13,17 @@
  *   2. Build its filename "skeleton" — every digit run replaced by a
  *      placeholder — e.g. "xpack-arm-none-eabi-gcc-15.2.1-1.1-linux-x64.tar.gz"
  *      -> "xpack-arm-none-eabi-gcc-N-N-linux-x64.tar.gz".
- *   3. Scan upstream releases (GitHub Releases API, or the ARM downloads
- *      page for the `arm` vendor) newest-first for an asset whose skeleton
- *      matches exactly.
+ *   3. Scan upstream releases (GitHub Releases API, or GitLab's generic
+ *      package registry for the `arm` vendor) newest-first for an asset
+ *      whose skeleton matches exactly.
  *   4. The new version key is read off the matched asset at the same
  *      digit-run position the old key occupied in the old filename — so no
  *      per-vendor tag-parsing rules are needed.
  *   5. SHA256 is read from a sidecar checksum file when the vendor
  *      publishes one (xpack: "<asset>.sha", espressif: a combined
  *      "*-checksum.sha256", zakkemble: "SHA256SUMS", winlibs: "<asset>.sha256")
- *      — falling back to downloading the asset and hashing it (always the
- *      case for `arm`, which publishes no checksums at all).
+ *      — falling back to downloading the asset and hashing it. `arm` assets
+ *      carry their sha256 directly in the GitLab package_files API response.
  *
  * A release newer than what's known but with no matching asset is reported
  * as "unresolved" rather than silently skipped or guessed.
@@ -59,11 +59,12 @@ const outPath = outIdx !== -1 ? args[outIdx + 1] : null;
 const dryRun = args.includes("--dry-run");
 
 const GITHUB_RELEASE_RE = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/releases\/download\/[^/]+\//;
-const ARM_DOWNLOADS_URL = "https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads";
+const ARM_GITLAB_PROJECT_ID = "10698";
+const ARM_GITLAB_API = `https://gitlab.arm.com/api/v4/projects/${ARM_GITLAB_PROJECT_ID}`;
 
-// Every URL this script fetches — including ones read back out of GitHub API
-// responses and scraped HTML — must resolve to one of these hosts over HTTPS.
-const TRUSTED_HOSTS = new Set(["api.github.com", "github.com", "objects.githubusercontent.com", "developer.arm.com"]);
+// Every URL this script fetches — including ones read back out of GitHub/GitLab
+// API responses — must resolve to one of these hosts over HTTPS.
+const TRUSTED_HOSTS = new Set(["api.github.com", "github.com", "objects.githubusercontent.com", "gitlab.arm.com"]);
 
 /**
  * Throws unless `url` is a plain https:// URL to one of TRUSTED_HOSTS — no
@@ -87,8 +88,7 @@ function assertTrustedUrl(url) {
     throw new Error(`refusing to fetch untrusted host "${parsed.hostname}": ${url}`);
   }
 }
-const ARM_LINK_RE = /https:\/\/developer\.arm\.com\/-\/media\/Files\/downloads\/gnu\/([0-9]+\.[0-9]+\.rel[0-9]+)\/binrel\/[^"'\s]+\.(?:tar\.xz|zip)/g;
-const VERSION_RE = /(\d+)\.(\d+)\.(?:rel)?(\d+)/;
+const VERSION_RE = /(\d+)\.(\d+)\.(?:rel)?(\d+)/i;
 const PRERELEASE_RE = /snapshot|alpha|beta|-rc\d*$/i;
 const CHECKSUM_LINE_RE = /^([0-9a-f]{64})\s+\*?(.+?)\s*$/i;
 
@@ -174,23 +174,35 @@ async function getGithubCandidates(owner, repo) {
   return candidates;
 }
 
+async function gitlabApi(url) {
+  assertTrustedUrl(url);
+  // nosemgrep: rules.lgpl.javascript.ssrf.rule-node-ssrf -- mitigated by assertTrustedUrl() above (host allowlist, https-only, no credentials/non-default port)
+  const res = await fetch(url, { headers: { "User-Agent": "setup-gcc-toolchain-version-check" } });
+  if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
+  return res.json();
+}
+
 let armCandidatesPromise = null;
 
 async function getArmCandidates() {
   if (!armCandidatesPromise) {
     armCandidatesPromise = (async () => {
-      assertTrustedUrl(ARM_DOWNLOADS_URL);
-      const res = await fetch(ARM_DOWNLOADS_URL, { headers: { "User-Agent": "setup-gcc-toolchain-version-check" } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const html = await res.text();
-      const byVersion = new Map();
-      for (const [url, ver] of html.matchAll(ARM_LINK_RE)) {
-        if (!byVersion.has(ver)) byVersion.set(ver, []);
-        byVersion.get(ver).push({ name: basenameOf(url), url });
+      const packages = await gitlabApi(`${ARM_GITLAB_API}/packages?package_type=generic&per_page=100`);
+      const candidates = [];
+      for (const pkg of packages) {
+        if (pkg.name !== "gnu-toolchain" || pkg.status !== "default") continue;
+        const version = parseVersion(pkg.version);
+        if (!version) continue;
+        const files = await gitlabApi(`${ARM_GITLAB_API}/packages/${pkg.id}/package_files?per_page=100`);
+        const assets = files
+          .filter((f) => /\.(?:tar\.xz|zip)$/.test(f.file_name))
+          .map((f) => ({
+            name: f.file_name,
+            url: `${ARM_GITLAB_API}/packages/generic/gnu-toolchain/${pkg.version}/${f.file_name}`,
+            sha256: f.file_sha256,
+          }));
+        candidates.push({ version, label: pkg.version, assets });
       }
-      const candidates = [...byVersion.entries()]
-        .map(([ver, assets]) => ({ version: parseVersion(ver), label: ver, assets }))
-        .filter((c) => c.version);
       candidates.sort((a, b) => compareVersions(b.version, a.version));
       return candidates;
     })();
@@ -247,6 +259,7 @@ async function downloadAndHash(url) {
 }
 
 async function resolveSha256(asset, siblingAssets) {
+  if (asset.sha256) return asset.sha256.toLowerCase();
   const sidecarNames = [`${asset.name}.sha256`, `${asset.name}.sha`];
   for (const name of sidecarNames) {
     const sidecar = siblingAssets.find((a) => a.name === name);
