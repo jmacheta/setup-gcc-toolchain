@@ -60,6 +60,18 @@ const dryRun = args.includes("--dry-run");
 
 const GITHUB_RELEASE_RE = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/releases\/download\/[^/]+\//;
 const ARM_DOWNLOADS_URL = "https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads";
+
+// Every URL this script fetches — including ones read back out of GitHub API
+// responses and scraped HTML — must resolve to one of these hosts over HTTPS.
+const TRUSTED_HOSTS = new Set(["api.github.com", "github.com", "objects.githubusercontent.com", "developer.arm.com"]);
+
+function assertTrustedUrl(url) {
+  const parsed = new URL(url);
+  if (parsed.protocol !== "https:" || !TRUSTED_HOSTS.has(parsed.hostname)) {
+    throw new Error(`refusing to fetch untrusted URL: ${url}`);
+  }
+  return url;
+}
 const ARM_LINK_RE = /https:\/\/developer\.arm\.com\/-\/media\/Files\/downloads\/gnu\/([0-9]+\.[0-9]+\.rel[0-9]+)\/binrel\/[^"'\s]+\.(?:tar\.xz|zip)/g;
 const VERSION_RE = /(\d+)\.(\d+)\.(?:rel)?(\d+)/;
 const PRERELEASE_RE = /snapshot|alpha|beta|-rc\d*$/i;
@@ -72,6 +84,7 @@ function parseVersion(str) {
 }
 
 function compareVersions(a, b) {
+  // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
   for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] - b[i];
   return 0;
 }
@@ -81,6 +94,7 @@ function basenameOf(url) {
 }
 
 function tokenize(name) {
+  // eslint-disable-next-line security/detect-unsafe-regex -- digit-only alternatives can't backtrack ambiguously
   return name.split(/(\d+(?:\.\d+)*)/);
 }
 
@@ -89,6 +103,7 @@ function locateKeyRange(tokens, key) {
   for (let i = 1; i < tokens.length; i += 2) {
     let acc = "";
     for (let j = i; j < tokens.length; j++) {
+      // eslint-disable-next-line security/detect-object-injection -- j is a bounded numeric loop counter, not external input
       acc += tokens[j];
       if (acc === key) return [i, j];
       if (acc.length >= key.length) break;
@@ -100,6 +115,7 @@ function locateKeyRange(tokens, key) {
 /** True if every non-digit segment is identical (only the digit runs may differ). */
 function sameSkeleton(a, b) {
   if (a.length !== b.length) return false;
+  // eslint-disable-next-line security/detect-object-injection -- k is a bounded numeric loop counter, not external input
   for (let k = 0; k < a.length; k += 2) if (a[k] !== b[k]) return false;
   return true;
 }
@@ -107,7 +123,7 @@ function sameSkeleton(a, b) {
 async function ghApi(url) {
   const headers = { "User-Agent": "setup-gcc-toolchain-version-check" };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
-  const res = await fetch(url, { headers });
+  const res = await fetch(assertTrustedUrl(url), { headers });
   if (!res.ok) throw new Error(`${url} -> HTTP ${res.status}`);
   return res.json();
 }
@@ -144,7 +160,7 @@ let armCandidatesPromise = null;
 async function getArmCandidates() {
   if (!armCandidatesPromise) {
     armCandidatesPromise = (async () => {
-      const res = await fetch(ARM_DOWNLOADS_URL, { headers: { "User-Agent": "setup-gcc-toolchain-version-check" } });
+      const res = await fetch(assertTrustedUrl(ARM_DOWNLOADS_URL), { headers: { "User-Agent": "setup-gcc-toolchain-version-check" } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const html = await res.text();
       const byVersion = new Map();
@@ -186,7 +202,7 @@ function findMatch(oldUrl, oldKey, minVersion, candidates) {
 // ── Checksum resolution ──────────────────────────────────────────────────────
 
 async function fetchText(url) {
-  const res = await fetch(url, { headers: { "User-Agent": "setup-gcc-toolchain-version-check" } });
+  const res = await fetch(assertTrustedUrl(url), { headers: { "User-Agent": "setup-gcc-toolchain-version-check" } });
   if (!res.ok) return null;
   return res.text();
 }
@@ -200,7 +216,7 @@ function findHashForFile(sumsText, targetFilename) {
 }
 
 async function downloadAndHash(url) {
-  const res = await fetch(url);
+  const res = await fetch(assertTrustedUrl(url));
   if (!res.ok) throw new Error(`download failed: HTTP ${res.status}`);
   const buf = Buffer.from(await res.arrayBuffer());
   return createHash("sha256").update(buf).digest("hex");
@@ -239,7 +255,9 @@ function insertVersion(text, vendor, toolchain, newKey, url, sha256) {
 
   let toolchainLine = -1;
   for (let i = vendorLine + 1; i < lines.length; i++) {
+    // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
     if (/^[A-Za-z]/.test(lines[i])) break;
+    // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
     if (lines[i] === `  ${toolchain}:`) {
       toolchainLine = i;
       break;
@@ -249,10 +267,12 @@ function insertVersion(text, vendor, toolchain, newKey, url, sha256) {
 
   let versionsLine = -1;
   for (let i = toolchainLine + 1; i < lines.length; i++) {
+    // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
     if (lines[i] === "    versions:") {
       versionsLine = i;
       break;
     }
+    // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
     if (/^ {2}\S/.test(lines[i])) break;
   }
   if (versionsLine === -1) throw new Error(`"versions:" not found under "${vendor}.${toolchain}"`);
@@ -268,8 +288,9 @@ const unresolved = []; // { vendor, toolchain, oldKey, sawNewer, reason }
 
 for (const file of DB_FILES) {
   const filePath = path.join(REPO_ROOT, file);
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath is built from a fixed, hardcoded list, not external input
   let text = readFileSync(filePath, "utf8");
-  const db = yaml.load(text);
+  const db = yaml.load(text, { schema: yaml.JSON_SCHEMA });
   let fileChanged = false;
 
   for (const [vendor, toolchains] of Object.entries(db)) {
@@ -316,6 +337,7 @@ for (const file of DB_FILES) {
     }
   }
 
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath is built from a fixed, hardcoded list, not external input
   if (fileChanged) writeFileSync(filePath, text);
 }
 
@@ -338,8 +360,11 @@ if (lines.length === 0) lines.push("No new upstream toolchain versions found.");
 
 const report = lines.join("\n") + "\n";
 console.log(report);
+// eslint-disable-next-line security/detect-non-literal-fs-filename -- outPath is an operator-supplied CLI flag, not external input
 if (outPath) writeFileSync(outPath, report);
 if (process.env.GITHUB_OUTPUT) {
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- GITHUB_OUTPUT is set by the CI runner itself
   appendFileSync(process.env.GITHUB_OUTPUT, `updated=${applied.length > 0}\n`);
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- GITHUB_OUTPUT is set by the CI runner itself
   appendFileSync(process.env.GITHUB_OUTPUT, `unresolved=${unresolved.length > 0}\n`);
 }

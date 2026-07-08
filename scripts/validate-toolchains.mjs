@@ -85,9 +85,11 @@ function headRequest(url, redirectsLeft = 5) {
 async function pool(tasks, limit) {
   const results = [];
   let idx = 0;
+  // eslint-disable-next-line security-node/detect-unhandled-async-errors -- rejections propagate through the Promise.all below
   async function worker() {
     while (idx < tasks.length) {
       const i = idx++;
+      // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
       results[i] = await tasks[i]();
     }
   }
@@ -107,7 +109,6 @@ function error(msg) {
 }
 
 function validateStructure(db, filePath) {
-  const issues = [];
   const urlEntries = []; // {path, url, sha256}
 
   if (typeof db !== "object" || db === null) {
@@ -173,8 +174,9 @@ async function validateFile(filePath) {
 
   let db;
   try {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath comes from a hardcoded list or an operator-supplied CLI flag
     const content = readFileSync(filePath, "utf8");
-    db = yaml.load(content);
+    db = yaml.load(content, { schema: yaml.JSON_SCHEMA });
   } catch (e) {
     error(`Failed to parse YAML: ${e.message}`);
     return;

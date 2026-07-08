@@ -39,31 +39,38 @@ const DB_FILES = [
   path.join(REPO_ROOT, "toolchains-windows-x64.yml"),
 ];
 
+function comparePart(va, vb) {
+  if (va < vb) return -1;
+  if (va > vb) return 1;
+  return 0;
+}
+
 function compareVersions(a, b) {
   const split = (v) => v.split(/[.\-_]/).map((p) => (isNaN(Number(p)) ? p : Number(p)));
   const pa = split(a);
   const pb = split(b);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const va = pa[i] ?? 0;
-    const vb = pb[i] ?? 0;
-    if (va < vb) return -1;
-    if (va > vb) return 1;
+    // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
+    const cmp = comparePart(pa[i] ?? 0, pb[i] ?? 0);
+    if (cmp !== 0) return cmp;
   }
   return 0;
 }
 
 // toolchain -> latest version string
-const latest = {};
+const latest = new Map();
 
 for (const file of DB_FILES) {
-  const db = yaml.load(readFileSync(file, "utf8"));
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- file comes from the hardcoded DB_FILES list above
+  const db = yaml.load(readFileSync(file, "utf8"), { schema: yaml.JSON_SCHEMA });
   for (const vendorDef of Object.values(db)) {
     for (const [toolchain, tcDef] of Object.entries(vendorDef)) {
       const versions = Object.keys(tcDef.versions ?? {});
       if (versions.length === 0) continue;
       const top = versions.sort((a, b) => compareVersions(b, a))[0];
-      if (!latest[toolchain] || compareVersions(top, latest[toolchain]) > 0) {
-        latest[toolchain] = top;
+      const current = latest.get(toolchain);
+      if (!current || compareVersions(top, current) > 0) {
+        latest.set(toolchain, top);
       }
     }
   }
@@ -71,7 +78,8 @@ for (const file of DB_FILES) {
 
 // Build Gist files payload
 const files = {};
-for (const [toolchain, version] of Object.entries(latest)) {
+for (const [toolchain, version] of latest) {
+  // eslint-disable-next-line security/detect-object-injection -- toolchain is a database key, not external input, and this must stay a plain object for JSON.stringify
   files[`${toolchain}.json`] = {
     content: JSON.stringify({
       schemaVersion: 1,
@@ -102,4 +110,5 @@ if (!res.ok) {
 }
 
 const gist = await res.json();
+// eslint-disable-next-line xss/no-mixed-html -- this is a plain CLI log line, not HTML output
 console.log(`Done. Gist URL: ${gist.html_url}`);
