@@ -1,7 +1,7 @@
 # GCC Toolchain Database — Windows x86_64 runner
 # Structure: vendor -> toolchain -> version -> {url, sha256}
 # Sources:
-#   arm:        https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads
+#   arm:        https://gitlab.arm.com/tooling/gnu-toolchains-for-arm
 #   xpack:      https://github.com/xpack-dev-tools
 #   espressif:  https://github.com/espressif/crosstool-NG
 #   zakkemble:  https://github.com/ZakKemble/avr-gcc-build
@@ -12,29 +12,65 @@ arm:
   arm-none-eabi:
     description: ARM bare-metal (Cortex-M/R, no OS) — official ARM Ltd release
     versions:
+      "15.2.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.2.rel1/arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-arm-none-eabi.zip
+        sha256: 7936cac895611023ffb22a64b8e426098c7104cb689778c1894572ca840b9ece
+      "14.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/14.3.rel1/arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-arm-none-eabi.zip
+        sha256: 864c0c8815857d68a1bbba2e5e2782255bb922845c71c97636004a3d74f60986
+      "15.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-mingw-w64-x86_64-arm-none-eabi.zip
+        sha256: b85669d3408e2ae713b17b0cc59bc4ea26369a7f2bd19108fd11df7095f159e6
       "14.2.rel1":
-        url: https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi.zip
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/14.2.rel1/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-eabi.zip
         sha256: f074615953f76036e9a51b87f6577fdb4ed8e77d3322a6f68214e92e7859888f
 
   aarch64-none-elf:
     description: AArch64 bare-metal (no OS) — official ARM Ltd release
     versions:
+      "15.2.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.2.rel1/arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-aarch64-none-elf.zip
+        sha256: 6f6cfd8732d7f5b5ef62ad0663bfe0ad5b89ee3a123ff3f6feda7d8018dd48c1
+      "14.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/14.3.rel1/arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-aarch64-none-elf.zip
+        sha256: 6b7d0680831feb5e69b3f8b9dc05f633c6a7b543b411f863e0f7bd263413c5a5
+      "15.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-mingw-w64-x86_64-aarch64-none-elf.zip
+        sha256: 5b06e28225c3c920627207a2198addce64b0c9f05faf6461b2234b85de15a8db
       "14.2.rel1":
-        url: https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-aarch64-none-elf.zip
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/14.2.rel1/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-aarch64-none-elf.zip
         sha256: 8c395a36849877d2f005fb1ac8c3611206f2f7930f15adfe95a21dd7969ca001
 
   arm-none-linux-gnueabihf:
     description: AArch32 Linux (hard-float, glibc) — official ARM Ltd release
     versions:
+      "15.2.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.2.rel1/arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-arm-none-linux-gnueabihf.zip
+        sha256: acba98ff50971e77e86b941386e72c9a642b0d5a81f6a6df1c69f2bf32917fbd
+      "14.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/14.3.rel1/arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-arm-none-linux-gnueabihf.zip
+        sha256: fd0801c9fcb0327978e5f7594f38225b7dec0fd515006c1608f74c0460111312
+      "15.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-mingw-w64-x86_64-arm-none-linux-gnueabihf.zip
+        sha256: 439067782fcf311e28ecf33d701bf1c2d0c862780dae9b3b1d327b2b9038a611
       "14.2.rel1":
-        url: https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-linux-gnueabihf.zip
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/14.2.rel1/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-arm-none-linux-gnueabihf.zip
         sha256: 2cab956da2d1ce52ab7e7dbbef9d3689bea1c16647230cbf67414d555f043cec
 
   aarch64-none-linux-gnu:
     description: AArch64 Linux (glibc) — official ARM Ltd release
     versions:
+      "15.2.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.2.rel1/arm-gnu-toolchain-15.2.rel1-mingw-w64-x86_64-aarch64-none-linux-gnu.zip
+        sha256: 43c374920d33a96232466b53f46c723c8ca260a86680c69f2ef8fc0c3cb5c28e
+      "14.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/14.3.rel1/arm-gnu-toolchain-14.3.rel1-mingw-w64-x86_64-aarch64-none-linux-gnu.zip
+        sha256: 50ebc89d3d152ee4d115e8f3d38cee050fe4050670fa53c51e92fa2792e6fdcf
+      "15.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-mingw-w64-x86_64-aarch64-none-linux-gnu.zip
+        sha256: 520463c926b30a8cf3c39641b64efe87242338a9662dd223d828ff2e11126cc4
       "14.2.rel1":
-        url: https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-aarch64-none-linux-gnu.zip
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/14.2.rel1/arm-gnu-toolchain-14.2.rel1-mingw-w64-x86_64-aarch64-none-linux-gnu.zip
         sha256: 9428b2039923916418ec7037025be8cec3202926d65db9452519977834ad2a89
 
 xpack:
