@@ -75,11 +75,18 @@ function singleHeadRequest(url) {
   });
 }
 
+const REQUEST_DELAY_MS = 200;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /** HEAD request following up to 5 redirects. Returns {ok, status, finalUrl}. */
-async function headRequest(url) {
+async function headRequestOnce(url) {
   let current = url;
   for (let redirectsLeft = 5; redirectsLeft >= 0; redirectsLeft--) {
     const result = await singleHeadRequest(current);
+    await sleep(REQUEST_DELAY_MS);
     if (result.error !== undefined) return { ok: false, status: 0, error: result.error };
     const { statusCode, location } = result;
     if (statusCode >= 300 && statusCode < 400 && location && redirectsLeft > 0) {
@@ -89,6 +96,18 @@ async function headRequest(url) {
     return { ok: statusCode < 400, status: statusCode, finalUrl: current };
   }
   return { ok: false, status: 0, error: "too many redirects" };
+}
+
+const MAX_ATTEMPTS = 3;
+
+/** headRequestOnce with retries on network errors (not on HTTP status codes). */
+async function headRequest(url) {
+  let result;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    result = await headRequestOnce(url);
+    if (result.error === undefined) return result;
+  }
+  return result;
 }
 
 /** Run tasks with bounded concurrency. tasks: array of () => Promise */
