@@ -88,6 +88,36 @@ describe("resolveToolchain", () => {
     expect(entry.sha256).toHaveLength(64);
   });
 
+  it("resolves arm-none-eabi (xpack) on darwin-arm64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "15.2.1-1.1", "darwin-arm64");
+    expect(entry.url).toContain("darwin-arm64");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves arm-none-eabi (xpack) on darwin-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "15.2.1-1.1", "darwin-x64");
+    expect(entry.url).toContain("darwin-x64");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves arm-none-eabi (arm official) on darwin-arm64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "15.2.rel1", "darwin-arm64", "arm");
+    expect(entry.url).toContain("darwin-arm64-arm-none-eabi");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves xtensa-esp-elf (espressif) on darwin-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "xtensa-esp-elf", "latest", "darwin-x64");
+    expect(entry.url).toContain("x86_64-apple-darwin");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("avr not available on darwin-arm64", () => {
+    expect(() =>
+      resolveToolchain(REPO_ROOT, "avr", "latest", "darwin-arm64")
+    ).toThrow(/not found/);
+  });
+
   it("resolves xpack x86_64-gcc on linux-x64", () => {
     const entry = resolveToolchain(REPO_ROOT, "x86_64-gcc", "15.2.0-1", "linux-x64");
     expect(entry.url).toContain("gcc-xpack");

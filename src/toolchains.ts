@@ -20,19 +20,19 @@ export type RunnerPlatform =
   | "linux-x64"
   | "linux-arm64"
   | "windows-x64"
-  | "windows-arm64";
+  | "windows-arm64"
+  | "darwin-x64"
+  | "darwin-arm64";
 
 export function detectPlatform(): RunnerPlatform {
   const arch = process.arch === "arm64" ? "arm64" : "x64";
-  const os = process.platform === "win32" ? "windows" : "linux";
+  const os = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "darwin" : "linux";
   return `${os}-${arch}` as RunnerPlatform;
 }
 
-const DB_FILES: ReadonlyMap<RunnerPlatform, string> = new Map([
-  ["linux-x64", "toolchains-linux-x64.yml"],
-  ["linux-arm64", "toolchains-linux-arm64.yml"],
-  ["windows-x64", "toolchains-windows-x64.yml"],
-]);
+const TOOLCHAINS_DIR = "toolchains";
+const DB_FILE_RE = /\.ya?ml$/;
+const PLATFORM_FIELD = "platform";
 
 const MAX_YAML_BYTES = 2 * 1024 * 1024; // 2 MiB — our largest database file today is ~45 KB
 
@@ -51,15 +51,20 @@ function resolveWithinRoot(root: string, relativeName: string): string {
   return resolved;
 }
 
-export function loadDatabase(repoRoot: string, platform?: RunnerPlatform): ToolchainDatabase {
-  const plat = platform ?? detectPlatform();
-  const dbFile = DB_FILES.get(plat);
-  if (!dbFile) {
-    throw new Error(
-      `No toolchain database available for runner platform "${plat}".\n` +
-      `Supported platforms: ${[...DB_FILES.keys()].join(", ")}`
-    );
-  }
+interface ParsedDbFile {
+  file: string;
+  platform: string | undefined;
+  vendors: ToolchainDatabase;
+}
+
+/**
+ * Every `*.yml`/`.yaml` file directly under `toolchains/` is a database.
+ * Which runner platform it serves is declared by its own top-level
+ * `platform:` field, not inferred from the filename — the filename is free
+ * text.
+ */
+function readDbFile(repoRoot: string, name: string): ParsedDbFile {
+  const dbFile = `${TOOLCHAINS_DIR}/${name}`;
   const dbPath = resolveWithinRoot(repoRoot, dbFile);
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- dbPath is checked by resolveWithinRoot() above
   const content = fs.readFileSync(dbPath, "utf8");
@@ -75,7 +80,39 @@ export function loadDatabase(repoRoot: string, platform?: RunnerPlatform): Toolc
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     throw new Error(`${dbFile}: expected the document root to be a mapping, got ${Array.isArray(parsed) ? "an array" : typeof parsed}`);
   }
-  return parsed as ToolchainDatabase;
+  const { [PLATFORM_FIELD]: platform, ...vendors } = parsed as Record<string, unknown>;
+  if (platform !== undefined && typeof platform !== "string") {
+    throw new Error(`${dbFile}: "${PLATFORM_FIELD}" field must be a string`);
+  }
+  return { file: dbFile, platform, vendors: vendors as ToolchainDatabase };
+}
+
+function readAllDbFiles(repoRoot: string): ParsedDbFile[] {
+  const dir = resolveWithinRoot(repoRoot, TOOLCHAINS_DIR);
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- dir is checked by resolveWithinRoot() above
+  return fs.readdirSync(dir)
+    .filter((name) => DB_FILE_RE.test(name))
+    .sort()
+    .map((name) => readDbFile(repoRoot, name));
+}
+
+function listAvailablePlatforms(repoRoot: string): string[] {
+  return readAllDbFiles(repoRoot)
+    .map((db) => db.platform)
+    .filter((plat): plat is string => plat !== undefined)
+    .sort();
+}
+
+export function loadDatabase(repoRoot: string, platform?: RunnerPlatform): ToolchainDatabase {
+  const plat = platform ?? detectPlatform();
+  const match = readAllDbFiles(repoRoot).find((db) => db.platform === plat);
+  if (!match) {
+    throw new Error(
+      `No toolchain database available for runner platform "${plat}".\n` +
+      `Supported platforms: ${listAvailablePlatforms(repoRoot).join(", ")}`
+    );
+  }
+  return match.vendors;
 }
 
 interface VendorMatch {

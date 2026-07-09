@@ -14,7 +14,7 @@
  *   GIST_TOKEN — GitHub PAT with the "gist" scope
  */
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -33,11 +33,12 @@ if (!GIST_ID || !GIST_TOKEN) {
   process.exit(1);
 }
 
-const DB_FILES = [
-  path.join(REPO_ROOT, "toolchains-linux-x64.yml"),
-  path.join(REPO_ROOT, "toolchains-linux-arm64.yml"),
-  path.join(REPO_ROOT, "toolchains-windows-x64.yml"),
-];
+const TOOLCHAINS_DIR = path.join(REPO_ROOT, "toolchains");
+
+const DB_FILES = readdirSync(TOOLCHAINS_DIR)
+  .filter((name) => /\.ya?ml$/.test(name))
+  .sort()
+  .map((name) => path.join(TOOLCHAINS_DIR, name));
 
 function comparePart(va, vb) {
   if (va < vb) return -1;
@@ -64,7 +65,8 @@ for (const file of DB_FILES) {
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- file comes from the hardcoded DB_FILES list above
   // nosemgrep: rules.lgpl.javascript.eval.rule-yaml-deserialize -- js-yaml 4+ load() is the safe function (safeLoad/safeDump were removed because the old unsafe constructors need an explicit opt-in Schema); JSON_SCHEMA further restricts to plain JSON-shaped values
   const db = yaml.load(readFileSync(file, "utf8"), { schema: yaml.JSON_SCHEMA });
-  for (const vendorDef of Object.values(db)) {
+  for (const [vendor, vendorDef] of Object.entries(db)) {
+    if (vendor === "platform") continue;
     for (const [toolchain, tcDef] of Object.entries(vendorDef)) {
       const versions = Object.keys(tcDef.versions ?? {});
       if (versions.length === 0) continue;
