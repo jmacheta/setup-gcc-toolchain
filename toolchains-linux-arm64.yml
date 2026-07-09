@@ -12,6 +12,9 @@ arm:
   arm-none-eabi:
     description: ARM bare-metal (Cortex-M/R, no OS) — official ARM Ltd release
     versions:
+      "15.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-aarch64-arm-none-eabi.tar.xz
+        sha256: 06979e0c8171de58e5dc2a2b2019330a290f30930f27728af98a83e1a7369b3a
       "14.2.rel1":
         url: https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-aarch64-arm-none-eabi.tar.xz
         sha256: 87330bab085dd8749d4ed0ad633674b9dc48b237b61069e3b481abd364d0a684
@@ -34,6 +37,9 @@ arm:
   aarch64-none-elf:
     description: AArch64 bare-metal (no OS) — official ARM Ltd release
     versions:
+      "15.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-aarch64-aarch64-none-elf.tar.xz
+        sha256: a1c6fdda8b479ea3e235d38dc0994790b840648b60e9fbaf88c82ca117a7a2df
       "14.2.rel1":
         url: https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-aarch64-aarch64-none-elf.tar.xz
         sha256: c4f0daab43f78e0d56ec2bdad76b98a0223ce12ce7fc51a6ce82f9cc6c6dfba0
@@ -56,6 +62,9 @@ arm:
   arm-none-linux-gnueabihf:
     description: AArch32 Linux (hard-float, glibc) — official ARM Ltd release
     versions:
+      "15.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-aarch64-arm-none-linux-gnueabihf.tar.xz
+        sha256: bcd23f1b1856904ad9593d79c08053e7acf564e3718c9f40d5aeab82ea9d834f
       "14.2.rel1":
         url: https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-aarch64-arm-none-linux-gnueabihf.tar.xz
         sha256: 3fe832f9c831323a37ff54bfb5ac7a083acdd473f2c93feaf0cb3c1ac690d739
@@ -78,6 +87,9 @@ arm:
   aarch64-none-linux-gnu:
     description: AArch64 Linux (glibc) — official ARM Ltd release
     versions:
+      "15.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-aarch64-aarch64-none-linux-gnu.tar.xz
+        sha256: 8020be7aa1013704756158400cb5ba438d6f09b2909795d13617b9e7bac53286
       "14.2.rel1":
         url: https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-aarch64-aarch64-none-linux-gnu.tar.xz
         sha256: 299c56db1644c135670afabbf801b97a42e5ef6069d73157ab869458cbda2096
