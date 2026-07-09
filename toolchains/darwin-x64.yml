@@ -1,0 +1,51 @@
+# GCC Toolchain Database — macOS Intel (x86_64) runner
+# Structure: vendor -> toolchain -> version -> {url, sha256}
+# Sources (macOS support confirmed by checking vendor release assets):
+#   xpack:      https://github.com/xpack-dev-tools
+#   espressif:  https://github.com/espressif/crosstool-NG
+#
+# Not included — no macOS x86_64 release assets found for these vendors as of this writing:
+#   arm (gnu-toolchains-for-arm): only ships darwin-arm64, dropped darwin-x86_64
+#   zakkemble (avr-gcc-build): linux/windows only
+#   winlibs: windows only (mingw host tool)
+
+platform: darwin-x64
+
+xpack:
+
+  arm-none-eabi:
+    description: ARM bare-metal (Cortex-M/R, no OS)
+    versions:
+      "15.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v15.2.1-1.1/xpack-arm-none-eabi-gcc-15.2.1-1.1-darwin-x64.tar.gz
+        sha256: 5be906a5194c3173e145a58048e5607ffff947773237802b93e55e23c415f1b6
+
+  aarch64-none-elf:
+    description: AArch64 bare-metal (no OS)
+    versions:
+      "15.2.1-1.1":
+        url: https://github.com/xpack-dev-tools/aarch64-none-elf-gcc-xpack/releases/download/v15.2.1-1.1/xpack-aarch64-none-elf-gcc-15.2.1-1.1-darwin-x64.tar.gz
+        sha256: d410f9f73d194e57704fea04e5ceeede992790f901e43614bbba4fcc173dd2ee
+
+  riscv-none-elf:
+    description: RISC-V bare-metal (RV32/RV64, no OS)
+    versions:
+      "15.2.0-1":
+        url: https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack/releases/download/v15.2.0-1/xpack-riscv-none-elf-gcc-15.2.0-1-darwin-x64.tar.gz
+        sha256: 98e83f097b10163869dabffd58389ac8e4eb41bae0f67124569158655be593ea
+
+  x86_64-w64-mingw32-gcc:
+    description: MinGW-w64 x86_64 cross GCC, UCRT runtime
+    versions:
+      "15.2.0-2":
+        url: https://github.com/xpack-dev-tools/mingw-w64-gcc-xpack/releases/download/v15.2.0-2/xpack-mingw-w64-gcc-15.2.0-2-darwin-x64.tar.gz
+        sha256: f82340a331b932bdb285ddd2d7861a1d5405c80ebf09dd3308aca60637ad418c
+
+espressif:
+
+  xtensa-esp-elf:
+    description: Xtensa bare-metal for ESP32/ESP32-S2/S3
+    versions:
+      "16.1.0_20260609":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.1.0_20260609/xtensa-esp-elf-16.1.0_20260609-x86_64-apple-darwin.tar.xz
+        sha256: c79d365223cec0e876fe0b25970a155ba9cddc2ee4130173944efe0ce1370d89

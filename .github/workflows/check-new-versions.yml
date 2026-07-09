@@ -64,7 +64,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B "$branch"
-          git add toolchains-linux-x64.yml toolchains-linux-arm64.yml toolchains-windows-x64.yml
+          git add toolchains/
           git commit -m "Update toolchain database with newer upstream releases"
           git push --force origin "$branch"
 

@@ -35,7 +35,7 @@
  * writes `updated=true|false` and `unresolved=true|false`.
  */
 
-import { readFileSync, writeFileSync, appendFileSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, appendFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -47,11 +47,10 @@ const yaml = require("js-yaml");
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.join(__dirname, "..");
 
-const DB_FILES = [
-  "toolchains-linux-x64.yml",
-  "toolchains-linux-arm64.yml",
-  "toolchains-windows-x64.yml",
-];
+const DB_FILES = readdirSync(path.join(REPO_ROOT, "toolchains"))
+  .filter((name) => /\.ya?ml$/.test(name))
+  .sort()
+  .map((name) => path.join("toolchains", name));
 
 const args = process.argv.slice(2);
 const outIdx = args.indexOf("--out");
@@ -332,6 +331,7 @@ for (const file of DB_FILES) {
   let fileChanged = false;
 
   for (const [vendor, toolchains] of Object.entries(db)) {
+    if (vendor === "platform") continue;
     for (const [toolchain, def] of Object.entries(toolchains)) {
       const entries = Object.entries(def.versions ?? {})
         .map(([key, entry]) => ({ key, version: parseVersion(key), url: entry.url }))

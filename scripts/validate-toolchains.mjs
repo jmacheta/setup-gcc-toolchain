@@ -17,7 +17,7 @@
  *   --concurrency  Max parallel HEAD requests (default: 20)
  */
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import https from "node:https";
 import http from "node:http";
 import path from "node:path";
@@ -41,13 +41,14 @@ const singleFile = fileIdx !== -1 ? args[fileIdx + 1] : null;
 const concurrencyIdx = args.indexOf("--concurrency");
 const concurrency = concurrencyIdx !== -1 ? parseInt(args[concurrencyIdx + 1], 10) : 20;
 
+const TOOLCHAINS_DIR = path.join(REPO_ROOT, "toolchains");
+
 const DB_FILES = singleFile
   ? [singleFile]
-  : [
-    path.join(REPO_ROOT, "toolchains-linux-x64.yml"),
-    path.join(REPO_ROOT, "toolchains-linux-arm64.yml"),
-    path.join(REPO_ROOT, "toolchains-windows-x64.yml"),
-  ];
+  : readdirSync(TOOLCHAINS_DIR)
+    .filter((name) => /\.ya?ml$/.test(name))
+    .sort()
+    .map((name) => path.join(TOOLCHAINS_DIR, name));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -150,6 +151,7 @@ function validateStructure(db, filePath) {
   }
 
   for (const [vendor, vendorDef] of Object.entries(db)) {
+    if (vendor === "platform") continue;
     if (typeof vendorDef !== "object" || vendorDef === null) {
       error(`${vendor}: expected object`);
       continue;

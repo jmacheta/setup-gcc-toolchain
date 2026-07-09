@@ -171,22 +171,9 @@ jobs:
       - run: make TOOLCHAIN=${{ matrix.toolchain.name }}
 ```
 
-## How it works
-
-1. Reads the toolchain URL and SHA256 from a bundled YAML database, selected by runner OS and architecture.
-2. Downloads the archive (`.tar.gz`, `.tar.xz`, or `.zip`).
-3. Verifies the SHA256 checksum before extraction.
-4. Extracts to `$RUNNER_TEMP/gcc-toolchain/<name>-<version>/`.
-5. Prepends the `bin/` directory to `PATH` — takes precedence over any pre-installed compiler.
-6. Optionally saves the extracted directory to `actions/cache`.
-
 ## Adding new toolchain versions
 
-The toolchain database lives in three YAML files at the repo root:
-
-- `toolchains-linux-x64.yml`
-- `toolchains-linux-arm64.yml`
-- `toolchains-windows-x64.yml`
+The toolchain database is every `<platform>.yml` file under [`toolchains/`](toolchains/)
 
 Each entry follows the pattern:
 
