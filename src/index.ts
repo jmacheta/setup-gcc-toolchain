@@ -49,6 +49,33 @@ async function verifyChecksum(
   /* eslint-enable security-node/detect-unhandled-async-errors */
 }
 
+const DOWNLOAD_MAX_ATTEMPTS = 3;
+const DOWNLOAD_RETRY_DELAY_MS = 1000;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function downloadToolWithRetry(url: string): Promise<string> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= DOWNLOAD_MAX_ATTEMPTS; attempt++) {
+    try {
+      return await tc.downloadTool(url);
+    } catch (err) {
+      lastError = err;
+      if (attempt < DOWNLOAD_MAX_ATTEMPTS) {
+        core.info(
+          `Download attempt ${attempt}/${DOWNLOAD_MAX_ATTEMPTS} failed: ${
+            err instanceof Error ? err.message : String(err)
+          }. Retrying in ${DOWNLOAD_RETRY_DELAY_MS}ms...`
+        );
+        await sleep(DOWNLOAD_RETRY_DELAY_MS);
+      }
+    }
+  }
+  throw lastError;
+}
+
 function assertSupportedScheme(url: string): void {
   let scheme: string;
   try {
@@ -156,7 +183,7 @@ async function installToolchain(
 
   const archiveName = path.basename(entry.url);
   core.info(`Downloading ${archiveName}...`);
-  const archivePath = await tc.downloadTool(entry.url);
+  const archivePath = await downloadToolWithRetry(entry.url);
 
   core.info("Verifying SHA256...");
   await verifyChecksum(archivePath, entry.sha256);
