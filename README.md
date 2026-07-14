@@ -30,6 +30,7 @@ The toolchain is prepended to `PATH`, so it takes priority over any pre-installe
 | `vendor` | no | — | Vendor name, e.g. `xpack` or `arm`. Required when a toolchain name is offered by multiple vendors and the requested version is ambiguous. |
 | `version` | no | `latest` | Version string, or `latest` for the newest available |
 | `enable-cache` | no | `true` | Cache the downloaded archive with `actions/cache` |
+| `set-ld-library-path` | no | `true` | Prepend the toolchain's `lib64`/`lib` directory to `LD_LIBRARY_PATH`, so binaries built with it use its bundled `libstdc++`/`libgcc` at runtime instead of an older system one. Fixes `GLIBCXX_x.y.z not found` errors when a native GCC toolchain (e.g. `x86_64-gcc`) is newer than the runner's system libstdc++. Set to `false` to leave `LD_LIBRARY_PATH` untouched. No-op on toolchains without a `lib64`/`lib` directory (e.g. Windows). |
 
 ### Vendor selection
 

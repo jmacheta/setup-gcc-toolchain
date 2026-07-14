@@ -155,6 +155,7 @@ interface RunInputs {
   vendor: string | undefined;
   version: string;
   enableCache: boolean;
+  setLdLibraryPath: boolean;
 }
 
 function readInputs(): RunInputs {
@@ -163,7 +164,18 @@ function readInputs(): RunInputs {
     vendor: core.getInput("vendor") || undefined,
     version: core.getInput("version") || "latest",
     enableCache: core.getInput("enable-cache") !== "false",
+    setLdLibraryPath: core.getInput("set-ld-library-path") !== "false",
   };
+}
+
+/** Finds the toolchain's runtime shared-library directory (lib64 takes priority over lib), if any. */
+function findLibDir(toolchainRoot: string): string | undefined {
+  for (const candidate of ["lib64", "lib"]) {
+    const dir = path.join(toolchainRoot, candidate);
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- toolchainRoot is derived from the already-validated installDir
+    if (fs.existsSync(dir)) return dir;
+  }
+  return undefined;
 }
 
 /** Downloads (or restores from cache), verifies and extracts the toolchain into installDir. Returns whether the cache was hit. */
@@ -206,7 +218,7 @@ async function installToolchain(
 }
 
 async function run(): Promise<void> {
-  const { toolchainName, vendor, version, enableCache } = readInputs();
+  const { toolchainName, vendor, version, enableCache, setLdLibraryPath } = readInputs();
 
   const repoRoot = path.join(__dirname, "..");
   const entry = resolveToolchain(repoRoot, toolchainName, version, undefined, vendor);
@@ -241,6 +253,15 @@ async function run(): Promise<void> {
   core.setOutput("cache-hit", String(cacheHit));
 
   core.info(`Added to PATH (first position): ${binPath}`);
+
+  if (setLdLibraryPath) {
+    const libDir = findLibDir(toolchainRoot);
+    if (libDir !== undefined) {
+      const existing = process.env.LD_LIBRARY_PATH;
+      core.exportVariable("LD_LIBRARY_PATH", existing ? `${libDir}:${existing}` : libDir);
+      core.info(`Prepended to LD_LIBRARY_PATH: ${libDir}`);
+    }
+  }
 
   await verifyOnPath(binPath, toolchainName);
 }
