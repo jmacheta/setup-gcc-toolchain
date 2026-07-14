@@ -17,6 +17,9 @@ arm:
   arm-none-eabi:
     description: ARM bare-metal (Cortex-M/R, no OS) — official ARM Ltd release
     versions:
+      "15.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-darwin-arm64-arm-none-eabi.tar.xz
+        sha256: 376808a59ca209c1413236f1c6a509e33da4b29857ab28642b9927cf3048af55
       "15.2.rel1":
         url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.2.rel1/arm-gnu-toolchain-15.2.rel1-darwin-arm64-arm-none-eabi.tar.xz
         sha256: 1938a84b7105c192e3fb4fa5e893ba25f425f7ddab40515ae608cd40f68669a8
@@ -24,6 +27,9 @@ arm:
   aarch64-none-elf:
     description: AArch64 bare-metal (no OS) — official ARM Ltd release
     versions:
+      "15.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-darwin-arm64-aarch64-none-elf.tar.xz
+        sha256: 1d9ac0c454ba555c0ee272c62fcf82a36ccc1c7c9173c1f6b0d02b8a14c59789
       "15.2.rel1":
         url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.2.rel1/arm-gnu-toolchain-15.2.rel1-darwin-arm64-aarch64-none-elf.tar.xz
         sha256: 37084c99bc05fda43a6c48900c638ae4fd6d93e2287ceb3e9bcda55437f1aadd
