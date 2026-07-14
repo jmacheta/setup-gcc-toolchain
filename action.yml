@@ -31,6 +31,14 @@ inputs:
     description: Cache the downloaded toolchain archive to speed up subsequent runs
     required: false
     default: "true"
+  set-ld-library-path:
+    description: >
+      Prepend the toolchain's lib/lib64 directory to LD_LIBRARY_PATH so binaries
+      built with it link against its bundled libstdc++/libgcc at runtime instead
+      of an older system one (avoids "GLIBCXX_x.y.z not found" errors). Set to
+      "false" to leave LD_LIBRARY_PATH untouched.
+    required: false
+    default: "true"
 
 outputs:
   toolchain-path:
