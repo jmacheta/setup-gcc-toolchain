@@ -601,6 +601,9 @@ zakkemble:
   avr:
     description: AVR microcontrollers (ATmega, ATtiny, etc.)
     versions:
+      "16.1.0":
+        url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v16.1.0-1/avr-gcc-16.1.0-x64-linux.tar.bz2
+        sha256: 8621ecc6514df50202b58b23b0f8f72f0e535ec35ee40426194e9a15c57692f6
       "15.2.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v15.2.0-1/avr-gcc-15.2.0-x64-linux.tar.bz2
         sha256: d90765e6d975950afa235aa998122f97aae8b00504399068b6c9d0bf4994b0fe
