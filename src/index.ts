@@ -11,7 +11,7 @@ import * as exec from "@actions/exec";
 import * as path from "path";
 import * as crypto from "crypto";
 import * as fs from "fs";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { resolveToolchain, ToolchainEntry } from "./toolchains.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -389,7 +389,9 @@ async function run(): Promise<void> {
 }
 
 // Guards against side effects when this module is imported by tests rather than executed directly.
-if (import.meta.url === `file://${process.argv[1]}`) {
+// pathToFileURL (not a raw `file://` template) is required for this to work on Windows, where
+// process.argv[1] is a backslash path ("C:\...") that doesn't already look like a file:// URI.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   run().catch((err: unknown) => {
     core.setFailed(err instanceof Error ? err.message : String(err));
   });
