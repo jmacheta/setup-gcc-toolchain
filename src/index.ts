@@ -209,15 +209,78 @@ function localArchivePathFor(localCacheLocation: string, entry: ToolchainEntry):
 }
 
 /**
+ * Returns the cached archive path if a local cache entry exists and passes checksum
+ * verification, `undefined` on a cache miss. A failed/unreadable entry is treated as a
+ * miss and best-effort deleted — deletion failure only logs a warning, since falling
+ * back to a fresh download is always safe.
+ */
+async function tryLocalCache(
+  entry: ToolchainEntry,
+  archiveName: string,
+  localCacheLocation: string
+): Promise<string | undefined> {
+  const localArchivePath = localArchivePathFor(localCacheLocation, entry);
+  // eslint-disable-next-line security/detect-non-literal-fs-filename -- localArchivePath is derived from validated localCacheLocation + basename(url)
+  if (!fs.existsSync(localArchivePath)) return undefined;
+
+  core.info(`Found ${archiveName} in local cache, verifying...`);
+  try {
+    await verifyChecksum(localArchivePath, entry.sha256);
+    core.info("Local cache checksum OK.");
+    return localArchivePath;
+  } catch (err) {
+    core.warning(
+      `Local cache entry failed checksum verification, re-downloading: ${
+        err instanceof Error ? err.message : String(err)
+      }`
+    );
+    try {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- localArchivePath is derived from validated localCacheLocation + basename(url)
+      fs.rmSync(localArchivePath, { force: true });
+    } catch (rmErr) {
+      core.warning(
+        `Could not remove stale local cache entry (continuing anyway): ${
+          rmErr instanceof Error ? rmErr.message : String(rmErr)
+        }`
+      );
+    }
+    return undefined;
+  }
+}
+
+/**
+ * Saves a freshly downloaded, already-verified archive into the local cache via a
+ * temp file + atomic rename, so concurrent action instances sharing the same directory
+ * never observe a partial archive. Best-effort: saving is an optimization, not a
+ * correctness requirement, so a disk-full/read-only/permission failure here only logs
+ * a warning — it never fails an install that already has a verified archive in hand.
+ */
+function saveToLocalCache(entry: ToolchainEntry, archivePath: string, localCacheLocation: string): void {
+  try {
+    const localArchivePath = localArchivePathFor(localCacheLocation, entry);
+    const tmpPath = `${localArchivePath}.${process.pid}.tmp`;
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- localCacheLocation is a validated input
+    fs.mkdirSync(localCacheLocation, { recursive: true });
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- archivePath comes from tc.downloadTool(), tmpPath is derived from validated localCacheLocation
+    fs.copyFileSync(archivePath, tmpPath);
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- tmpPath/localArchivePath are derived from validated localCacheLocation; rename is atomic on the same filesystem
+    fs.renameSync(tmpPath, localArchivePath);
+    core.info(`Saved to local cache: ${localArchivePath}`);
+  } catch (err) {
+    core.warning(
+      `Could not save to local cache (continuing without it): ${
+        err instanceof Error ? err.message : String(err)
+      }`
+    );
+  }
+}
+
+/**
  * Fetches the toolchain archive, preferring (in order) a verified local-disk cache entry,
  * then a verified download. The local cache is a directory of raw archives, so an existing
  * checksum from the toolchain database is always re-checked against whatever's on disk —
  * a mismatch (corruption, tampering, stale entry) is treated as a miss and falls back to
- * downloading fresh. Writes into the local cache go through a temp file + atomic rename so
- * concurrent action instances sharing the same directory never observe a partial archive.
- * Local-cache reads/writes are best-effort: a cache directory that's unwritable, full, or
- * otherwise misbehaving only logs a warning — it never fails an install that already has a
- * verified archive in hand.
+ * downloading fresh.
  */
 export async function fetchArchive(
   entry: ToolchainEntry,
@@ -227,32 +290,8 @@ export async function fetchArchive(
   const archiveName = path.basename(entry.url);
 
   if (useLocalCache && localCacheLocation !== undefined) {
-    const localArchivePath = localArchivePathFor(localCacheLocation, entry);
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- localArchivePath is derived from validated localCacheLocation + basename(url)
-    if (fs.existsSync(localArchivePath)) {
-      core.info(`Found ${archiveName} in local cache, verifying...`);
-      try {
-        await verifyChecksum(localArchivePath, entry.sha256);
-        core.info("Local cache checksum OK.");
-        return localArchivePath;
-      } catch (err) {
-        core.warning(
-          `Local cache entry failed checksum verification, re-downloading: ${
-            err instanceof Error ? err.message : String(err)
-          }`
-        );
-        try {
-          // eslint-disable-next-line security/detect-non-literal-fs-filename -- localArchivePath is derived from validated localCacheLocation + basename(url)
-          fs.rmSync(localArchivePath, { force: true });
-        } catch (rmErr) {
-          core.warning(
-            `Could not remove stale local cache entry (continuing anyway): ${
-              rmErr instanceof Error ? rmErr.message : String(rmErr)
-            }`
-          );
-        }
-      }
-    }
+    const cached = await tryLocalCache(entry, archiveName, localCacheLocation);
+    if (cached !== undefined) return cached;
   }
 
   core.info(`Downloading ${archiveName}...`);
@@ -262,26 +301,7 @@ export async function fetchArchive(
   await verifyChecksum(archivePath, entry.sha256);
 
   if (useLocalCache && localCacheLocation !== undefined) {
-    try {
-      const localArchivePath = localArchivePathFor(localCacheLocation, entry);
-      const tmpPath = `${localArchivePath}.${process.pid}.tmp`;
-      // eslint-disable-next-line security/detect-non-literal-fs-filename -- localCacheLocation is a validated input
-      fs.mkdirSync(localCacheLocation, { recursive: true });
-      // eslint-disable-next-line security/detect-non-literal-fs-filename -- archivePath comes from tc.downloadTool(), tmpPath is derived from validated localCacheLocation
-      fs.copyFileSync(archivePath, tmpPath);
-      // eslint-disable-next-line security/detect-non-literal-fs-filename -- tmpPath/localArchivePath are derived from validated localCacheLocation; rename is atomic on the same filesystem
-      fs.renameSync(tmpPath, localArchivePath);
-      core.info(`Saved to local cache: ${localArchivePath}`);
-    } catch (err) {
-      // Saving to the local cache is an optimization, not a correctness requirement —
-      // we already have a verified archive, so a disk-full/read-only/permission failure
-      // here shouldn't fail the whole install.
-      core.warning(
-        `Could not save to local cache (continuing without it): ${
-          err instanceof Error ? err.message : String(err)
-        }`
-      );
-    }
+    saveToLocalCache(entry, archivePath, localCacheLocation);
   }
 
   return archivePath;
