@@ -154,16 +154,32 @@ interface RunInputs {
   toolchainName: string;
   vendor: string | undefined;
   version: string;
-  enableCache: boolean;
+  useRemoteCache: boolean;
+  useLocalCache: boolean;
+  localCacheLocation: string | undefined;
   setLdLibraryPath: boolean;
 }
 
-function readInputs(): RunInputs {
+export function readInputs(): RunInputs {
+  const useLocalCache = core.getInput("use-local-cache") === "true";
+  // The location is runner-specific, so a self-hosted runner can set this once in its
+  // own environment instead of every workflow repeating it via `with:`.
+  const localCacheLocation = useLocalCache
+    ? core.getInput("local-cache-location") || process.env.SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION || undefined
+    : undefined;
+  if (useLocalCache && !localCacheLocation) {
+    throw new Error(
+      "use-local-cache is true but local-cache-location was not provided " +
+      "(and SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION is not set)."
+    );
+  }
   return {
     toolchainName: core.getInput("toolchain", { required: true }),
     vendor: core.getInput("vendor") || undefined,
     version: core.getInput("version") || "latest",
-    enableCache: core.getInput("enable-cache") !== "false",
+    useRemoteCache: core.getInput("use-remote-cache") !== "false",
+    useLocalCache,
+    localCacheLocation,
     setLdLibraryPath: core.getInput("set-ld-library-path") !== "false",
   };
 }
@@ -178,14 +194,109 @@ function findLibDir(toolchainRoot: string): string | undefined {
   return undefined;
 }
 
-/** Downloads (or restores from cache), verifies and extracts the toolchain into installDir. Returns whether the cache was hit. */
+/**
+ * Local cache files are keyed by checksum (not by URL basename): the checksum is unique
+ * per toolchain/vendor/version, so two unrelated entries whose upstream archives happen to
+ * share a filename (e.g. a generic "linux-x64.tar.gz") can't collide or evict one another.
+ * The checksum here is only ever used as an opaque, collision-resistant filename component —
+ * it is still independently re-verified against the file's actual contents on every read.
+ */
+function localArchivePathFor(localCacheLocation: string, entry: ToolchainEntry): string {
+  const archiveName = path.basename(entry.url);
+  const localArchivePath = path.join(localCacheLocation, `${entry.sha256.toLowerCase()}-${archiveName}`);
+  assertWithinDir(localCacheLocation, localArchivePath);
+  return localArchivePath;
+}
+
+/**
+ * Fetches the toolchain archive, preferring (in order) a verified local-disk cache entry,
+ * then a verified download. The local cache is a directory of raw archives, so an existing
+ * checksum from the toolchain database is always re-checked against whatever's on disk —
+ * a mismatch (corruption, tampering, stale entry) is treated as a miss and falls back to
+ * downloading fresh. Writes into the local cache go through a temp file + atomic rename so
+ * concurrent action instances sharing the same directory never observe a partial archive.
+ * Local-cache reads/writes are best-effort: a cache directory that's unwritable, full, or
+ * otherwise misbehaving only logs a warning — it never fails an install that already has a
+ * verified archive in hand.
+ */
+export async function fetchArchive(
+  entry: ToolchainEntry,
+  useLocalCache: boolean,
+  localCacheLocation: string | undefined
+): Promise<string> {
+  const archiveName = path.basename(entry.url);
+
+  if (useLocalCache && localCacheLocation !== undefined) {
+    const localArchivePath = localArchivePathFor(localCacheLocation, entry);
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- localArchivePath is derived from validated localCacheLocation + basename(url)
+    if (fs.existsSync(localArchivePath)) {
+      core.info(`Found ${archiveName} in local cache, verifying...`);
+      try {
+        await verifyChecksum(localArchivePath, entry.sha256);
+        core.info("Local cache checksum OK.");
+        return localArchivePath;
+      } catch (err) {
+        core.warning(
+          `Local cache entry failed checksum verification, re-downloading: ${
+            err instanceof Error ? err.message : String(err)
+          }`
+        );
+        try {
+          // eslint-disable-next-line security/detect-non-literal-fs-filename -- localArchivePath is derived from validated localCacheLocation + basename(url)
+          fs.rmSync(localArchivePath, { force: true });
+        } catch (rmErr) {
+          core.warning(
+            `Could not remove stale local cache entry (continuing anyway): ${
+              rmErr instanceof Error ? rmErr.message : String(rmErr)
+            }`
+          );
+        }
+      }
+    }
+  }
+
+  core.info(`Downloading ${archiveName}...`);
+  const archivePath = await downloadToolWithRetry(entry.url);
+
+  core.info("Verifying SHA256...");
+  await verifyChecksum(archivePath, entry.sha256);
+
+  if (useLocalCache && localCacheLocation !== undefined) {
+    try {
+      const localArchivePath = localArchivePathFor(localCacheLocation, entry);
+      const tmpPath = `${localArchivePath}.${process.pid}.tmp`;
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- localCacheLocation is a validated input
+      fs.mkdirSync(localCacheLocation, { recursive: true });
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- archivePath comes from tc.downloadTool(), tmpPath is derived from validated localCacheLocation
+      fs.copyFileSync(archivePath, tmpPath);
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- tmpPath/localArchivePath are derived from validated localCacheLocation; rename is atomic on the same filesystem
+      fs.renameSync(tmpPath, localArchivePath);
+      core.info(`Saved to local cache: ${localArchivePath}`);
+    } catch (err) {
+      // Saving to the local cache is an optimization, not a correctness requirement —
+      // we already have a verified archive, so a disk-full/read-only/permission failure
+      // here shouldn't fail the whole install.
+      core.warning(
+        `Could not save to local cache (continuing without it): ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      );
+    }
+  }
+
+  return archivePath;
+}
+
+/** Restores from remote cache, or downloads (via the local cache when enabled) and extracts into installDir. Returns whether a cache was hit. */
 async function installToolchain(
   entry: ToolchainEntry,
   installDir: string,
   cacheKey: string,
-  enableCache: boolean
+  useRemoteCache: boolean,
+  useLocalCache: boolean,
+  localCacheLocation: string | undefined
 ): Promise<boolean> {
-  if (enableCache) {
+  if (useRemoteCache) {
     const restoredKey = await cache.restoreCache([installDir], cacheKey);
     if (restoredKey !== undefined) {
       core.info(`Restored from cache: ${restoredKey}`);
@@ -193,12 +304,8 @@ async function installToolchain(
     }
   }
 
+  const archivePath = await fetchArchive(entry, useLocalCache, localCacheLocation);
   const archiveName = path.basename(entry.url);
-  core.info(`Downloading ${archiveName}...`);
-  const archivePath = await downloadToolWithRetry(entry.url);
-
-  core.info("Verifying SHA256...");
-  await verifyChecksum(archivePath, entry.sha256);
 
   core.info(`Extracting to ${installDir}...`);
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- installDir was just checked by assertWithinDir() above
@@ -210,15 +317,23 @@ async function installToolchain(
     await tc.extractTar(archivePath, installDir, tarFlags(archiveName));
   }
 
-  if (enableCache) {
-    core.info("Saving to cache...");
+  if (useRemoteCache) {
+    core.info("Saving to remote cache...");
     await cache.saveCache([installDir], cacheKey);
   }
   return false;
 }
 
 async function run(): Promise<void> {
-  const { toolchainName, vendor, version, enableCache, setLdLibraryPath } = readInputs();
+  const {
+    toolchainName,
+    vendor,
+    version,
+    useRemoteCache,
+    useLocalCache,
+    localCacheLocation,
+    setLdLibraryPath,
+  } = readInputs();
 
   const repoRoot = path.join(__dirname, "..");
   const entry = resolveToolchain(repoRoot, toolchainName, version, undefined, vendor);
@@ -236,7 +351,14 @@ async function run(): Promise<void> {
   assertWithinDir(runnerTemp, installDir);
   const cacheKey = `setup-gcc-toolchain-v1-${toolchainName}-${resolvedVersion}-${process.platform}-${process.arch}`;
 
-  const cacheHit = await installToolchain(entry, installDir, cacheKey, enableCache);
+  const cacheHit = await installToolchain(
+    entry,
+    installDir,
+    cacheKey,
+    useRemoteCache,
+    useLocalCache,
+    localCacheLocation
+  );
 
   const toolchainRoot = findToolchainRoot(installDir);
   const binPath = path.join(toolchainRoot, "bin");
@@ -266,6 +388,9 @@ async function run(): Promise<void> {
   await verifyOnPath(binPath, toolchainName);
 }
 
-run().catch((err: unknown) => {
-  core.setFailed(err instanceof Error ? err.message : String(err));
-});
+// Guards against side effects when this module is imported by tests rather than executed directly.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  run().catch((err: unknown) => {
+    core.setFailed(err instanceof Error ? err.message : String(err));
+  });
+}

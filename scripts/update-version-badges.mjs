@@ -18,6 +18,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
+import { compareVersions } from "../shared/compare-versions.mjs";
 
 const require = createRequire(import.meta.url);
 const yaml = require("js-yaml");
@@ -39,24 +40,6 @@ const DB_FILES = readdirSync(TOOLCHAINS_DIR)
   .filter((name) => /\.ya?ml$/.test(name))
   .sort()
   .map((name) => path.join(TOOLCHAINS_DIR, name));
-
-function comparePart(va, vb) {
-  if (va < vb) return -1;
-  if (va > vb) return 1;
-  return 0;
-}
-
-function compareVersions(a, b) {
-  const split = (v) => v.split(/[.\-_]/).map((p) => (isNaN(Number(p)) ? p : Number(p)));
-  const pa = split(a);
-  const pb = split(b);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
-    const cmp = comparePart(pa[i] ?? 0, pb[i] ?? 0);
-    if (cmp !== 0) return cmp;
-  }
-  return 0;
-}
 
 // toolchain -> latest version string
 const latest = new Map();
