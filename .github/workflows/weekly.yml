@@ -89,7 +89,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           version: latest
-          enable-cache: false
+          use-remote-cache: false
 
       - name: Verify binary is first in PATH
         run: |
@@ -134,7 +134,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           version: latest
-          enable-cache: false
+          use-remote-cache: false
 
       - name: Verify binary is first in PATH
         run: |

@@ -27,10 +27,27 @@ inputs:
       newest available version.
     required: false
     default: "latest"
-  enable-cache:
-    description: Cache the downloaded toolchain archive to speed up subsequent runs
+  use-remote-cache:
+    description: Cache the extracted toolchain with actions/cache to speed up subsequent runs
     required: false
     default: "true"
+  use-local-cache:
+    description: >
+      Reuse downloaded toolchain archives from a directory on the runner's disk
+      (e.g. a persistent self-hosted runner path, or a bind-mounted host directory)
+      instead of re-downloading. Requires local-cache-location (directly, or via
+      the SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION environment variable).
+    required: false
+    default: "false"
+  local-cache-location:
+    description: >
+      Directory used to store/reuse downloaded toolchain archives when
+      use-local-cache is true. Left empty (the default), falls back to the
+      SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION environment variable — so a
+      self-hosted runner can set its cache path once instead of every workflow
+      repeating it. An error if neither is set.
+    required: false
+    default: ""
   set-ld-library-path:
     description: >
       Prepend the toolchain's lib/lib64 directory to LD_LIBRARY_PATH so binaries

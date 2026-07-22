@@ -1,6 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "js-yaml";
+import { compareVersions } from "../shared/compare-versions.mjs";
+
+export { compareVersions };
 
 export interface ToolchainEntry {
   url: string;
@@ -242,22 +245,3 @@ export function resolveToolchain(
     : pickVersion(matches, toolchainName, requestedVersion);
 }
 
-export function compareVersions(a: string, b: string): number {
-  const pa = a.split(/[.\-_]/);
-  const pb = b.split(/[.\-_]/);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    // eslint-disable-next-line security/detect-object-injection -- i is a bounded numeric loop counter, not external input
-    const cmp = compareVersionPart(pa[i] ?? "0", pb[i] ?? "0");
-    if (cmp !== 0) return cmp;
-  }
-  return 0;
-}
-
-function compareVersionPart(sa: string, sb: string): number {
-  const na = Number(sa);
-  const nb = Number(sb);
-  const bothNumeric = sa !== "" && sb !== "" && !isNaN(na) && !isNaN(nb);
-  if (bothNumeric) return na - nb;
-  if (sa === sb) return 0;
-  return sa < sb ? -1 : 1;
-}

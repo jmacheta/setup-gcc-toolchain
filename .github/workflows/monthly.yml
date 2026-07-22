@@ -51,7 +51,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           version: ${{ matrix.version }}
-          enable-cache: false
+          use-remote-cache: false
 
       - name: Verify binary
         run: |
@@ -86,7 +86,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           version: ${{ matrix.version }}
-          enable-cache: false
+          use-remote-cache: false
 
       - name: Verify binary
         run: |
@@ -125,7 +125,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           version: ${{ matrix.version }}
-          enable-cache: false
+          use-remote-cache: false
 
       - name: Verify binary
         run: |
@@ -156,7 +156,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           version: ${{ matrix.version }}
-          enable-cache: true
+          use-remote-cache: true
 
       - name: Verify cache-hit is false on first run
         run: |
@@ -172,7 +172,7 @@ jobs:
         with:
           toolchain: ${{ matrix.toolchain }}
           version: ${{ matrix.version }}
-          enable-cache: true
+          use-remote-cache: true
 
       - name: Verify cache-hit is true on second run
         run: |
