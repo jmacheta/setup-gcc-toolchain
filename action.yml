@@ -27,27 +27,21 @@ inputs:
       newest available version.
     required: false
     default: "latest"
-  use-remote-cache:
+  cache-strategy:
     description: >
-      Cache the extracted toolchain with actions/cache to speed up subsequent runs.
-      Left unset (the default), defaults to "true" — unless use-local-cache is also
-      "true", in which case it defaults to "false" (a disk-local cache already avoids
-      re-downloads, so a remote cache round-trip on top of it is usually redundant).
-      Set explicitly to "true" to keep both caches active at once.
+      Which cache(s) to use: "remote" (actions/cache, default) — works on any runner,
+      including ephemeral GitHub-hosted ones; "local" (a directory on the runner's
+      disk, requires local-cache-location) — only useful on a persistent self-hosted
+      runner, but avoids network round-trips and actions/cache quota entirely; "both"
+      — e.g. for a matrix mixing persistent self-hosted and ephemeral hosted runners,
+      where local cache helps the former and remote cache is the only option for the
+      latter; or "none" to always download fresh.
     required: false
-    default: ""
-  use-local-cache:
-    description: >
-      Reuse downloaded toolchain archives from a directory on the runner's disk
-      (e.g. a persistent self-hosted runner path, or a bind-mounted host directory)
-      instead of re-downloading. Requires local-cache-location (directly, or via
-      the SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION environment variable).
-    required: false
-    default: "false"
+    default: "remote"
   local-cache-location:
     description: >
-      Directory used to store/reuse downloaded toolchain archives when
-      use-local-cache is true. Left empty (the default), falls back to the
+      Directory used to store/reuse downloaded toolchain archives when cache-strategy
+      is "local" or "both". Left empty (the default), falls back to the
       SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION environment variable — so a
       self-hosted runner can set its cache path once instead of every workflow
       repeating it. An error if neither is set.
