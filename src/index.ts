@@ -123,11 +123,20 @@ function findToolchainRoot(installDir: string): string {
   return entries.length === 1 ? path.join(installDir, entries[0]) : installDir;
 }
 
-async function verifyOnPath(binPath: string, toolchainName: string): Promise<void> {
-  // Derive a sensible binary name to probe: use the triplet prefix if present,
-  // otherwise plain "gcc". For winlibs mingw the binary is e.g. x86_64-w64-mingw32-gcc.
-  const probe = toolchainName === "x86_64-gcc" ? "gcc" : `${toolchainName}-gcc`;
+/**
+ * Derives the binary name to probe for. Most toolchain names are a bare
+ * triplet (e.g. arm-none-eabi) and the binary adds "-gcc" on top. A few
+ * names (x86_64-w64-mingw32-gcc) already *are* the full binary name, so
+ * don't double it up. "x86_64-gcc" is the one true exception: "no cross
+ * prefix" means the binary is plain "gcc".
+ */
+export function probeBinaryName(toolchainName: string): string {
+  if (toolchainName === "x86_64-gcc") return "gcc";
+  return toolchainName.endsWith("-gcc") ? toolchainName : `${toolchainName}-gcc`;
+}
 
+async function verifyOnPath(binPath: string, toolchainName: string): Promise<void> {
+  const probe = probeBinaryName(toolchainName);
   const ext = process.platform === "win32" ? ".exe" : "";
   const binaryPath = path.join(binPath, probe + ext);
 
@@ -147,7 +156,7 @@ async function verifyOnPath(binPath: string, toolchainName: string): Promise<voi
     ignoreReturnCode: true,
     listeners: { stdout: (d) => { output += d.toString(); } },
   });
-  core.info(`Verified: ${output.split("\n")[0].trim()}`);
+  core.info(`✅ Verified: ${output.split("\n")[0].trim()}`);
 }
 
 interface RunInputs {
@@ -238,10 +247,10 @@ async function tryLocalCache(
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- localArchivePath is derived from validated localCacheLocation + basename(url)
   if (!fs.existsSync(localArchivePath)) return undefined;
 
-  core.info(`Found ${archiveName} in local cache, verifying...`);
+  core.info(`💾 Found ${archiveName} in local cache, verifying...`);
   try {
     await verifyChecksum(localArchivePath, entry.sha256);
-    core.info("Local cache checksum OK.");
+    core.info("✅ Local cache checksum OK.");
     return localArchivePath;
   } catch (err) {
     core.warning(
@@ -280,7 +289,7 @@ function saveToLocalCache(entry: ToolchainEntry, archivePath: string, localCache
     fs.copyFileSync(archivePath, tmpPath);
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- tmpPath/localArchivePath are derived from validated localCacheLocation; rename is atomic on the same filesystem
     fs.renameSync(tmpPath, localArchivePath);
-    core.info(`Saved to local cache: ${localArchivePath}`);
+    core.info(`💾 Saved to local cache: ${localArchivePath}`);
   } catch (err) {
     core.warning(
       `Could not save to local cache (continuing without it): ${
@@ -309,10 +318,10 @@ export async function fetchArchive(
     if (cached !== undefined) return cached;
   }
 
-  core.info(`Downloading ${archiveName}...`);
+  core.info(`⬇️ Downloading ${archiveName}...`);
   const archivePath = await downloadToolWithRetry(entry.url);
 
-  core.info("Verifying SHA256...");
+  core.info("🔒 Verifying SHA256...");
   await verifyChecksum(archivePath, entry.sha256);
 
   if (useLocalCache && localCacheLocation !== undefined) {
@@ -334,7 +343,7 @@ export async function installToolchain(
   if (useRemoteCache) {
     const restoredKey = await cache.restoreCache([installDir], cacheKey);
     if (restoredKey !== undefined) {
-      core.info(`Restored from cache: ${restoredKey}`);
+      core.info(`♻️ Restored from remote cache: ${restoredKey}`);
       return true;
     }
   }
@@ -342,18 +351,20 @@ export async function installToolchain(
   const archivePath = await fetchArchive(entry, useLocalCache, localCacheLocation);
   const archiveName = path.basename(entry.url);
 
-  core.info(`Extracting to ${installDir}...`);
+  core.info(`📂 Extracting to ${installDir}...`);
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- installDir was just checked by assertWithinDir() above
   fs.mkdirSync(installDir, { recursive: true });
 
+  core.startGroup(`Extracting ${archiveName}`);
   if (archiveName.endsWith(".zip")) {
     await tc.extractZip(archivePath, installDir);
   } else {
     await tc.extractTar(archivePath, installDir, tarFlags(archiveName));
   }
+  core.endGroup();
 
   if (useRemoteCache) {
-    core.info("Saving to remote cache...");
+    core.info("☁️ Saving to remote cache...");
     await cache.saveCache([installDir], cacheKey);
   }
   return false;
@@ -377,8 +388,8 @@ async function run(): Promise<void> {
     ? path.basename(entry.url).match(/[\d.]+[-_][\d.]+/)?.[0] ?? version
     : version;
 
-  core.info(`Toolchain: ${toolchainName} @ ${resolvedVersion}`);
-  core.info(`URL: ${entry.url}`);
+  core.info(`📦 Toolchain: ${toolchainName} @ ${resolvedVersion}`);
+  core.info(`🔗 URL: ${entry.url}`);
   assertSupportedScheme(entry.url);
 
   const runnerTemp = process.env.RUNNER_TEMP ?? "/tmp";
@@ -409,18 +420,19 @@ async function run(): Promise<void> {
   core.setOutput("toolchain-path", toolchainRoot);
   core.setOutput("cache-hit", String(cacheHit));
 
-  core.info(`Added to PATH (first position): ${binPath}`);
+  core.info(`🛣️ Added to PATH (first position): ${binPath}`);
 
   if (setLdLibraryPath) {
     const libDir = findLibDir(toolchainRoot);
     if (libDir !== undefined) {
       const existing = process.env.LD_LIBRARY_PATH;
       core.exportVariable("LD_LIBRARY_PATH", existing ? `${libDir}:${existing}` : libDir);
-      core.info(`Prepended to LD_LIBRARY_PATH: ${libDir}`);
+      core.info(`🔗 Prepended to LD_LIBRARY_PATH: ${libDir}`);
     }
   }
 
   await verifyOnPath(binPath, toolchainName);
+  core.info(`🎉 ${toolchainName} ${resolvedVersion} ready (cache ${cacheHit ? "hit" : "miss"}).`);
 }
 
 // Guards against side effects when this module is imported by tests rather than executed directly.
