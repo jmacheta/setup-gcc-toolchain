@@ -31,7 +31,7 @@ The toolchain is prepended to `PATH`, so it takes priority over any pre-installe
 | `version` | no | `latest` | Version string, or `latest` for the newest available |
 | `cache-strategy` | no | `remote` | How to cache the toolchain: `remote`, `local`, `both`, or `none` — see [Caching](#caching) |
 | `local-cache-location` | no\* | — (or env var, see [Caching](#caching)) | Directory for the local archive cache. \*Required when `cache-strategy` is `local` or `both` |
-| `set-ld-library-path` | no | `true` | Prepend the toolchain's `lib64`/`lib` to `LD_LIBRARY_PATH`, so built binaries use its bundled `libstdc++`/`libgcc` instead of an older system one. `false` leaves `LD_LIBRARY_PATH` untouched |
+| `set-ld-library-path` | no | `true` | Prepend the toolchain's `lib64`/`lib` to `LD_LIBRARY_PATH`, so built binaries use its bundled `libstdc++`/`libgcc` |
 
 ### Vendor selection
 
