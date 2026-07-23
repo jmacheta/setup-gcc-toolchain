@@ -173,11 +173,18 @@ export function readInputs(): RunInputs {
       "(and SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION is not set)."
     );
   }
+
+  // A disk-local cache already avoids re-downloads, so paying for a remote actions/cache
+  // round-trip on top of it is usually pointless — default remote cache off when local
+  // cache is on. An explicit use-remote-cache value (true or false) always wins.
+  const useRemoteCacheInput = core.getInput("use-remote-cache");
+  const useRemoteCache = useRemoteCacheInput !== "" ? useRemoteCacheInput === "true" : !useLocalCache;
+
   return {
     toolchainName: core.getInput("toolchain", { required: true }),
     vendor: core.getInput("vendor") || undefined,
     version: core.getInput("version") || "latest",
-    useRemoteCache: core.getInput("use-remote-cache") !== "false",
+    useRemoteCache,
     useLocalCache,
     localCacheLocation,
     setLdLibraryPath: core.getInput("set-ld-library-path") !== "false",

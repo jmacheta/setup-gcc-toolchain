@@ -199,7 +199,7 @@ describe("fetchArchive (local cache)", () => {
   });
 });
 
-describe("readInputs (local-cache-location resolution)", () => {
+describe("readInputs (cache input resolution)", () => {
   const managedKeys = [
     inputEnvKeys("toolchain"),
     inputEnvKeys("use-local-cache"),
@@ -251,5 +251,32 @@ describe("readInputs (local-cache-location resolution)", () => {
     process.env[inputEnvKeys("use-local-cache")] = "true";
 
     expect(() => readInputs()).toThrow(/local-cache-location/);
+  });
+
+  it("defaults use-remote-cache to true when use-local-cache is off", () => {
+    process.env[inputEnvKeys("use-local-cache")] = "false";
+    expect(readInputs().useRemoteCache).toBe(true);
+  });
+
+  it("defaults use-remote-cache to false when use-local-cache is on and remote-cache is unset", () => {
+    process.env[inputEnvKeys("use-local-cache")] = "true";
+    process.env[inputEnvKeys("local-cache-location")] = "/some/cache";
+
+    expect(readInputs().useRemoteCache).toBe(false);
+  });
+
+  it("keeps use-remote-cache true when explicitly set, even with local cache on", () => {
+    process.env[inputEnvKeys("use-local-cache")] = "true";
+    process.env[inputEnvKeys("local-cache-location")] = "/some/cache";
+    process.env[inputEnvKeys("use-remote-cache")] = "true";
+
+    expect(readInputs().useRemoteCache).toBe(true);
+  });
+
+  it("keeps use-remote-cache false when explicitly set, even with local cache off", () => {
+    process.env[inputEnvKeys("use-local-cache")] = "false";
+    process.env[inputEnvKeys("use-remote-cache")] = "false";
+
+    expect(readInputs().useRemoteCache).toBe(false);
   });
 });

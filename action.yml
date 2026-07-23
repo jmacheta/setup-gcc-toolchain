@@ -28,9 +28,14 @@ inputs:
     required: false
     default: "latest"
   use-remote-cache:
-    description: Cache the extracted toolchain with actions/cache to speed up subsequent runs
+    description: >
+      Cache the extracted toolchain with actions/cache to speed up subsequent runs.
+      Left unset (the default), defaults to "true" — unless use-local-cache is also
+      "true", in which case it defaults to "false" (a disk-local cache already avoids
+      re-downloads, so a remote cache round-trip on top of it is usually redundant).
+      Set explicitly to "true" to keep both caches active at once.
     required: false
-    default: "true"
+    default: ""
   use-local-cache:
     description: >
       Reuse downloaded toolchain archives from a directory on the runner's disk
