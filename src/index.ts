@@ -432,7 +432,11 @@ async function run(): Promise<void> {
   }
 
   await verifyOnPath(binPath, toolchainName);
-  core.info(`🎉 ${toolchainName} ${resolvedVersion} ready (cache ${cacheHit ? "hit" : "miss"}).`);
+
+  // cacheHit only ever reflects a *remote* actions/cache restore (see installToolchain) —
+  // stating it unconditionally would contradict a local-cache hit already logged above.
+  const cacheNote = useRemoteCache ? ` (remote cache ${cacheHit ? "hit" : "miss"})` : "";
+  core.info(`🎉 ${toolchainName} ${resolvedVersion} ready${cacheNote}.`);
 }
 
 // Guards against side effects when this module is imported by tests rather than executed directly.
