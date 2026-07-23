@@ -160,8 +160,22 @@ interface RunInputs {
   setLdLibraryPath: boolean;
 }
 
+const CACHE_STRATEGIES = ["none", "local", "remote", "both"] as const;
+type CacheStrategy = (typeof CACHE_STRATEGIES)[number];
+
+function readCacheStrategy(): CacheStrategy {
+  const raw = core.getInput("cache-strategy") || "remote";
+  if (!(CACHE_STRATEGIES as readonly string[]).includes(raw)) {
+    throw new Error(`cache-strategy must be one of: ${CACHE_STRATEGIES.join(", ")} (got "${raw}")`);
+  }
+  return raw as CacheStrategy;
+}
+
 export function readInputs(): RunInputs {
-  const useLocalCache = core.getInput("use-local-cache") === "true";
+  const cacheStrategy = readCacheStrategy();
+  const useRemoteCache = cacheStrategy === "remote" || cacheStrategy === "both";
+  const useLocalCache = cacheStrategy === "local" || cacheStrategy === "both";
+
   // The location is runner-specific, so a self-hosted runner can set this once in its
   // own environment instead of every workflow repeating it via `with:`.
   const localCacheLocation = useLocalCache
@@ -169,15 +183,16 @@ export function readInputs(): RunInputs {
     : undefined;
   if (useLocalCache && !localCacheLocation) {
     throw new Error(
-      "use-local-cache is true but local-cache-location was not provided " +
+      `cache-strategy is "${cacheStrategy}" but local-cache-location was not provided ` +
       "(and SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION is not set)."
     );
   }
+
   return {
     toolchainName: core.getInput("toolchain", { required: true }),
     vendor: core.getInput("vendor") || undefined,
     version: core.getInput("version") || "latest",
-    useRemoteCache: core.getInput("use-remote-cache") !== "false",
+    useRemoteCache,
     useLocalCache,
     localCacheLocation,
     setLdLibraryPath: core.getInput("set-ld-library-path") !== "false",
@@ -308,7 +323,7 @@ export async function fetchArchive(
 }
 
 /** Restores from remote cache, or downloads (via the local cache when enabled) and extracts into installDir. Returns whether a cache was hit. */
-async function installToolchain(
+export async function installToolchain(
   entry: ToolchainEntry,
   installDir: string,
   cacheKey: string,

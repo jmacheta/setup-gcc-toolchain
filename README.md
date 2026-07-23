@@ -29,9 +29,8 @@ The toolchain is prepended to `PATH`, so it takes priority over any pre-installe
 | `toolchain` | yes | — | Toolchain name (see [Supported toolchains](#supported-toolchains)) |
 | `vendor` | no | — | Vendor name, e.g. `xpack` or `arm`. Required when a toolchain name is offered by multiple vendors and the requested version is ambiguous. |
 | `version` | no | `latest` | Version string, or `latest` for the newest available |
-| `use-remote-cache` | no | `true` | Cache the extracted toolchain with `actions/cache` |
-| `use-local-cache` | no | `false` | Reuse downloaded archives from a directory on the runner's disk (e.g. a persistent self-hosted runner path) instead of re-downloading. Requires `local-cache-location` (directly, or via `SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION`). The checksum from the toolchain database is always re-verified against the on-disk archive; a mismatch is treated as a miss and falls back to a fresh download. |
-| `local-cache-location` | no\* | — (or `SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION`) | Directory used to store/reuse downloaded archives when `use-local-cache` is `true`. Falls back to the `SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION` env var if the input is omitted — so a self-hosted runner can set its cache path once instead of every workflow repeating it. Safe for concurrent runners sharing the same local disk (atomic rename); not guaranteed on a network filesystem (e.g. NFS). \*Required (one way or the other) when `use-local-cache` is `true`. |
+| `cache-strategy` | no | `remote` | `remote` — cache the extracted toolchain with `actions/cache`; works on any runner, including ephemeral GitHub-hosted ones. `local` — reuse downloaded archives from a directory on the runner's disk instead of re-downloading; only useful on a persistent self-hosted runner, but skips the network round-trip and `actions/cache` quota entirely. Requires `local-cache-location` (directly, or via `SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION`); the checksum from the toolchain database is always re-verified against the on-disk archive, and a mismatch falls back to a fresh download. `both` — e.g. for a matrix mixing persistent self-hosted and ephemeral hosted runners, where local cache helps the former and remote cache is the only option for the latter. `none` — always download fresh. |
+| `local-cache-location` | no\* | — (or `SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION`) | Directory used to store/reuse downloaded archives when `cache-strategy` is `local` or `both`. Falls back to the `SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION` env var if the input is omitted — so a self-hosted runner can set its cache path once instead of every workflow repeating it. Safe for concurrent runners sharing the same local disk (atomic rename); not guaranteed on a network filesystem (e.g. NFS). \*Required (one way or the other) when `cache-strategy` is `local` or `both`. |
 | `set-ld-library-path` | no | `true` | Prepend the toolchain's `lib64`/`lib` directory to `LD_LIBRARY_PATH`, so binaries built with it use its bundled `libstdc++`/`libgcc` at runtime instead of an older system one. Fixes `GLIBCXX_x.y.z not found` errors when a native GCC toolchain (e.g. `x86_64-gcc`) is newer than the runner's system libstdc++. Set to `false` to leave `LD_LIBRARY_PATH` untouched. No-op on toolchains without a `lib64`/`lib` directory (e.g. Windows). |
 
 ### Vendor selection
@@ -102,7 +101,7 @@ jobs:
 - uses: jmacheta/setup-gcc-toolchain@v1
   with:
     toolchain: riscv-none-elf
-    use-remote-cache: false
+    cache-strategy: none
 ```
 
 ### ESP32 on Linux ARM64 runner

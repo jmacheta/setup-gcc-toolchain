@@ -10,19 +10,24 @@ function sha256Of(filePath: string): string {
 }
 
 const downloadToolMock = jest.fn<() => Promise<string>>();
+const extractZipMock = jest.fn();
+const extractTarMock = jest.fn();
 
 jest.unstable_mockModule("@actions/tool-cache", () => ({
   downloadTool: downloadToolMock,
-  extractZip: jest.fn(),
-  extractTar: jest.fn(),
+  extractZip: extractZipMock,
+  extractTar: extractTarMock,
 }));
+
+const restoreCacheMock = jest.fn<() => Promise<string | undefined>>(async () => undefined);
+const saveCacheMock = jest.fn<() => Promise<number>>(async () => 0);
 
 jest.unstable_mockModule("@actions/cache", () => ({
-  restoreCache: jest.fn(async () => undefined),
-  saveCache: jest.fn(async () => 0),
+  restoreCache: restoreCacheMock,
+  saveCache: saveCacheMock,
 }));
 
-const { fetchArchive, readInputs } = await import("../src/index.js");
+const { fetchArchive, installToolchain, readInputs } = await import("../src/index.js");
 
 const inputEnvKeys = (name: string): string => `INPUT_${name.replace(/ /g, "_").toUpperCase()}`;
 
@@ -199,12 +204,157 @@ describe("fetchArchive (local cache)", () => {
   });
 });
 
-describe("readInputs (local-cache-location resolution)", () => {
+describe("installToolchain (remote cache)", () => {
+  let installDir: string;
+
+  beforeEach(() => {
+    installDir = fs.mkdtempSync(path.join(os.tmpdir(), "install-dir-"));
+    restoreCacheMock.mockReset().mockResolvedValue(undefined);
+    saveCacheMock.mockReset().mockResolvedValue(0);
+    downloadToolMock.mockReset();
+    extractZipMock.mockReset();
+    extractTarMock.mockReset();
+  });
+
+  afterEach(() => {
+    fs.rmSync(installDir, { recursive: true, force: true });
+  });
+
+  it("on a remote cache hit, skips downloading, extracting, and re-uploading", async () => {
+    restoreCacheMock.mockResolvedValue("some-cache-key");
+    const entry: ToolchainEntry = { url: "https://example.com/dist/toolchain-1.0.0.tar.gz", sha256: "irrelevant" };
+
+    const cacheHit = await installToolchain(entry, installDir, "cache-key", true, false, undefined);
+
+    expect(cacheHit).toBe(true);
+    expect(downloadToolMock).not.toHaveBeenCalled();
+    expect(extractTarMock).not.toHaveBeenCalled();
+    expect(saveCacheMock).not.toHaveBeenCalled();
+  });
+
+  it("on a remote cache miss, downloads, extracts, and uploads to the remote cache", async () => {
+    const downloadedPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "download-")), "toolchain-1.0.0.tar.gz");
+    fs.writeFileSync(downloadedPath, "genuine archive contents");
+    const entry: ToolchainEntry = {
+      url: "https://example.com/dist/toolchain-1.0.0.tar.gz",
+      sha256: crypto.createHash("sha256").update("genuine archive contents").digest("hex"),
+    };
+    downloadToolMock.mockResolvedValue(downloadedPath);
+
+    try {
+      const cacheHit = await installToolchain(entry, installDir, "cache-key", true, false, undefined);
+
+      expect(cacheHit).toBe(false);
+      expect(downloadToolMock).toHaveBeenCalledTimes(1);
+      expect(extractTarMock).toHaveBeenCalledTimes(1);
+      expect(saveCacheMock).toHaveBeenCalledTimes(1);
+    } finally {
+      fs.rmSync(path.dirname(downloadedPath), { recursive: true, force: true });
+    }
+  });
+
+  it("never touches the remote cache when useRemoteCache is false", async () => {
+    const downloadedPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "download-")), "toolchain-1.0.0.tar.gz");
+    fs.writeFileSync(downloadedPath, "genuine archive contents");
+    const entry: ToolchainEntry = {
+      url: "https://example.com/dist/toolchain-1.0.0.tar.gz",
+      sha256: crypto.createHash("sha256").update("genuine archive contents").digest("hex"),
+    };
+    downloadToolMock.mockResolvedValue(downloadedPath);
+
+    try {
+      const cacheHit = await installToolchain(entry, installDir, "cache-key", false, false, undefined);
+
+      expect(cacheHit).toBe(false);
+      expect(restoreCacheMock).not.toHaveBeenCalled();
+      expect(saveCacheMock).not.toHaveBeenCalled();
+    } finally {
+      fs.rmSync(path.dirname(downloadedPath), { recursive: true, force: true });
+    }
+  });
+});
+
+describe("installToolchain (local cache)", () => {
+  let installDir: string;
+  let localCacheLocation: string;
+
+  beforeEach(() => {
+    installDir = fs.mkdtempSync(path.join(os.tmpdir(), "install-dir-"));
+    localCacheLocation = fs.mkdtempSync(path.join(os.tmpdir(), "local-cache-"));
+    restoreCacheMock.mockReset().mockResolvedValue(undefined);
+    saveCacheMock.mockReset().mockResolvedValue(0);
+    downloadToolMock.mockReset();
+    extractZipMock.mockReset();
+    extractTarMock.mockReset();
+  });
+
+  afterEach(() => {
+    fs.rmSync(installDir, { recursive: true, force: true });
+    fs.rmSync(localCacheLocation, { recursive: true, force: true });
+  });
+
+  it("on a local cache hit, skips downloading but still extracts (the archive cache holds no extracted output)", async () => {
+    const entry: ToolchainEntry = {
+      url: "https://example.com/dist/toolchain-1.0.0.tar.gz",
+      sha256: crypto.createHash("sha256").update("genuine archive contents").digest("hex"),
+    };
+    fs.writeFileSync(path.join(localCacheLocation, `${entry.sha256}-toolchain-1.0.0.tar.gz`), "genuine archive contents");
+
+    const cacheHit = await installToolchain(entry, installDir, "cache-key", false, true, localCacheLocation);
+
+    expect(downloadToolMock).not.toHaveBeenCalled();
+    expect(extractTarMock).toHaveBeenCalledTimes(1);
+    // installToolchain's cacheHit output only reflects a *remote* actions/cache restore —
+    // a local archive-cache hit still re-extracts, so it isn't reported as a cache hit here.
+    expect(cacheHit).toBe(false);
+  });
+
+  it("on a local cache miss, downloads, extracts, and saves into the local cache", async () => {
+    const downloadedPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "download-")), "toolchain-1.0.0.tar.gz");
+    fs.writeFileSync(downloadedPath, "genuine archive contents");
+    const entry: ToolchainEntry = {
+      url: "https://example.com/dist/toolchain-1.0.0.tar.gz",
+      sha256: crypto.createHash("sha256").update("genuine archive contents").digest("hex"),
+    };
+    downloadToolMock.mockResolvedValue(downloadedPath);
+
+    try {
+      const cacheHit = await installToolchain(entry, installDir, "cache-key", false, true, localCacheLocation);
+
+      expect(cacheHit).toBe(false);
+      expect(downloadToolMock).toHaveBeenCalledTimes(1);
+      expect(extractTarMock).toHaveBeenCalledTimes(1);
+      expect(fs.readdirSync(localCacheLocation)).toEqual([`${entry.sha256}-toolchain-1.0.0.tar.gz`]);
+      expect(restoreCacheMock).not.toHaveBeenCalled();
+      expect(saveCacheMock).not.toHaveBeenCalled();
+    } finally {
+      fs.rmSync(path.dirname(downloadedPath), { recursive: true, force: true });
+    }
+  });
+
+  it("never touches the local cache directory when useLocalCache is false", async () => {
+    const downloadedPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "download-")), "toolchain-1.0.0.tar.gz");
+    fs.writeFileSync(downloadedPath, "genuine archive contents");
+    const entry: ToolchainEntry = {
+      url: "https://example.com/dist/toolchain-1.0.0.tar.gz",
+      sha256: crypto.createHash("sha256").update("genuine archive contents").digest("hex"),
+    };
+    downloadToolMock.mockResolvedValue(downloadedPath);
+
+    try {
+      await installToolchain(entry, installDir, "cache-key", false, false, undefined);
+      expect(fs.readdirSync(localCacheLocation)).toEqual([]);
+    } finally {
+      fs.rmSync(path.dirname(downloadedPath), { recursive: true, force: true });
+    }
+  });
+});
+
+describe("readInputs (cache-strategy resolution)", () => {
   const managedKeys = [
     inputEnvKeys("toolchain"),
-    inputEnvKeys("use-local-cache"),
+    inputEnvKeys("cache-strategy"),
     inputEnvKeys("local-cache-location"),
-    inputEnvKeys("use-remote-cache"),
     inputEnvKeys("vendor"),
     inputEnvKeys("version"),
     inputEnvKeys("set-ld-library-path"),
@@ -227,29 +377,63 @@ describe("readInputs (local-cache-location resolution)", () => {
     }
   });
 
-  it("leaves local-cache-location undefined when use-local-cache is off", () => {
-    process.env[inputEnvKeys("use-local-cache")] = "false";
-    expect(readInputs().localCacheLocation).toBeUndefined();
+  it("defaults to remote-only when cache-strategy is omitted", () => {
+    const result = readInputs();
+    expect(result.useRemoteCache).toBe(true);
+    expect(result.useLocalCache).toBe(false);
+    expect(result.localCacheLocation).toBeUndefined();
   });
 
-  it("prefers the explicit input over the environment variable", () => {
-    process.env[inputEnvKeys("use-local-cache")] = "true";
+  it("rejects an unrecognized cache-strategy value", () => {
+    process.env[inputEnvKeys("cache-strategy")] = "bogus";
+    expect(() => readInputs()).toThrow(/cache-strategy must be one of/);
+  });
+
+  it('"none" disables both caches', () => {
+    process.env[inputEnvKeys("cache-strategy")] = "none";
+    const result = readInputs();
+    expect(result.useRemoteCache).toBe(false);
+    expect(result.useLocalCache).toBe(false);
+  });
+
+  it('"remote" enables only the remote cache', () => {
+    process.env[inputEnvKeys("cache-strategy")] = "remote";
+    const result = readInputs();
+    expect(result.useRemoteCache).toBe(true);
+    expect(result.useLocalCache).toBe(false);
+  });
+
+  it('"local" enables only the local cache and requires a location', () => {
+    process.env[inputEnvKeys("cache-strategy")] = "local";
+    expect(() => readInputs()).toThrow(/local-cache-location/);
+
+    process.env[inputEnvKeys("local-cache-location")] = "/some/cache";
+    const result = readInputs();
+    expect(result.useRemoteCache).toBe(false);
+    expect(result.useLocalCache).toBe(true);
+    expect(result.localCacheLocation).toBe("/some/cache");
+  });
+
+  it('"both" enables both caches', () => {
+    process.env[inputEnvKeys("cache-strategy")] = "both";
+    process.env[inputEnvKeys("local-cache-location")] = "/some/cache";
+    const result = readInputs();
+    expect(result.useRemoteCache).toBe(true);
+    expect(result.useLocalCache).toBe(true);
+  });
+
+  it("prefers the explicit local-cache-location input over the environment variable", () => {
+    process.env[inputEnvKeys("cache-strategy")] = "local";
     process.env[inputEnvKeys("local-cache-location")] = "/explicit/from-input";
     process.env.SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION = "/from/env";
 
     expect(readInputs().localCacheLocation).toBe("/explicit/from-input");
   });
 
-  it("falls back to the environment variable when the input is omitted", () => {
-    process.env[inputEnvKeys("use-local-cache")] = "true";
+  it("falls back to the environment variable when local-cache-location is omitted", () => {
+    process.env[inputEnvKeys("cache-strategy")] = "local";
     process.env.SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION = "/from/env";
 
     expect(readInputs().localCacheLocation).toBe("/from/env");
-  });
-
-  it("throws when use-local-cache is on but neither the input nor the environment variable is set", () => {
-    process.env[inputEnvKeys("use-local-cache")] = "true";
-
-    expect(() => readInputs()).toThrow(/local-cache-location/);
   });
 });
