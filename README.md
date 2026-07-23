@@ -14,7 +14,7 @@ A GitHub Action that downloads, verifies, and adds a GCC cross-compilation toolc
 ## Usage
 
 ```yaml
-- uses: jmacheta/setup-gcc-toolchain@v1
+- uses: jmacheta/setup-gcc-toolchain@v2
   with:
     toolchain: arm-none-eabi
     version: "15.2.1-1.1"
@@ -38,7 +38,7 @@ The toolchain is prepended to `PATH`, so it takes priority over any pre-installe
 Some toolchain names are provided by more than one vendor (e.g. `arm-none-eabi` is available from both `arm` and `xpack`). Without specifying `vendor`, the action picks the first match and raises an error if the requested version exists in multiple vendors. Use the `vendor` input to be explicit:
 
 ```yaml
-- uses: jmacheta/setup-gcc-toolchain@v1
+- uses: jmacheta/setup-gcc-toolchain@v2
   with:
     toolchain: arm-none-eabi
     vendor: xpack          # xPack release
@@ -95,7 +95,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jmacheta/setup-gcc-toolchain@v1
+      - uses: jmacheta/setup-gcc-toolchain@v2
         with:
           toolchain: arm-none-eabi
           version: "15.2.1-1.1"
@@ -109,7 +109,7 @@ jobs:
 `version` defaults to `latest`, so it can be omitted entirely:
 
 ```yaml
-- uses: jmacheta/setup-gcc-toolchain@v1
+- uses: jmacheta/setup-gcc-toolchain@v2
   with:
     toolchain: riscv-none-elf
     cache-strategy: none
@@ -124,7 +124,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jmacheta/setup-gcc-toolchain@v1
+      - uses: jmacheta/setup-gcc-toolchain@v2
         with:
           toolchain: xtensa-esp-elf
           version: "16.1.0_20260609"
@@ -141,7 +141,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jmacheta/setup-gcc-toolchain@v1
+      - uses: jmacheta/setup-gcc-toolchain@v2
         with:
           toolchain: x86_64-w64-mingw32-ucrt
           version: "16.1.0"
@@ -154,7 +154,7 @@ jobs:
 When a toolchain is provided by more than one vendor, use the `vendor` input:
 
 ```yaml
-- uses: jmacheta/setup-gcc-toolchain@v1
+- uses: jmacheta/setup-gcc-toolchain@v2
   with:
     toolchain: arm-none-eabi
     vendor: arm              # official ARM Ltd release
@@ -176,7 +176,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jmacheta/setup-gcc-toolchain@v1
+      - uses: jmacheta/setup-gcc-toolchain@v2
         with:
           toolchain: ${{ matrix.toolchain.name }}
           version: ${{ matrix.toolchain.version }}
