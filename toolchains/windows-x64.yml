@@ -389,6 +389,9 @@ winlibs:
   x86_64-w64-mingw32-ucrt:
     description: MinGW-w64 x86_64, UCRT runtime
     versions:
+      "16.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.2.0posix-14.0.0-ucrt-r1/winlibs-x86_64-posix-seh-gcc-16.2.0-mingw-w64ucrt-14.0.0-r1.zip
+        sha256: c1f52294597c0b73786b2a78eb5d176d89226d2f21875eab75e783a8b1cefcc4
       "16.1.0":
         url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.1.0posix-14.0.0-ucrt-r3/winlibs-x86_64-posix-seh-gcc-16.1.0-mingw-w64ucrt-14.0.0-r3.zip
         sha256: 4273565109cd8ab8ecef1b0dc2a56fd7f5c7ee0885840a1c011b9325160ec0c3
@@ -429,6 +432,9 @@ winlibs:
   x86_64-w64-mingw32-msvcrt:
     description: MinGW-w64 x86_64, legacy MSVCRT runtime
     versions:
+      "16.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.2.0posix-14.0.0-msvcrt-r1/winlibs-x86_64-posix-seh-gcc-16.2.0-mingw-w64msvcrt-14.0.0-r1.zip
+        sha256: a6cb646ed5fc1c2326d29fad90bdae5b1d6251463dd81b6e37e499fe8ef80ca8
       "16.1.0":
         url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.1.0posix-14.0.0-msvcrt-r3/winlibs-x86_64-posix-seh-gcc-16.1.0-mingw-w64msvcrt-14.0.0-r3.zip
         sha256: 38bceeff9d6f227e8a2fc0e5eb63a8b7e0f4b5cf2db8120e8e13862fdaaa2c87
@@ -469,6 +475,9 @@ winlibs:
   i686-w64-mingw32-ucrt:
     description: MinGW-w64 i686 32-bit, UCRT runtime
     versions:
+      "16.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.2.0posix-14.0.0-ucrt-r1/winlibs-i686-posix-dwarf-gcc-16.2.0-mingw-w64ucrt-14.0.0-r1.zip
+        sha256: f0f9fc147e18a9b83a3f956a173c417ec1e403de942a8a2c44d7e5bed3dfec20
       "16.1.0":
         url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.1.0posix-14.0.0-ucrt-r3/winlibs-i686-posix-dwarf-gcc-16.1.0-mingw-w64ucrt-14.0.0-r3.zip
         sha256: c4c7419f2820ac2e169dc86f1397a07deff20297a107c7a1ca486643d8d435be
@@ -509,6 +518,9 @@ winlibs:
   i686-w64-mingw32-msvcrt:
     description: MinGW-w64 i686 32-bit, legacy MSVCRT runtime
     versions:
+      "16.2.0":
+        url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.2.0posix-14.0.0-msvcrt-r1/winlibs-i686-posix-dwarf-gcc-16.2.0-mingw-w64msvcrt-14.0.0-r1.zip
+        sha256: e479f6c5750d43131f89b55998546f2d2611e8b04ff4f934e9d9de7996252bfd
       "16.1.0":
         url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.1.0posix-14.0.0-msvcrt-r3/winlibs-i686-posix-dwarf-gcc-16.1.0-mingw-w64msvcrt-14.0.0-r3.zip
         sha256: ec3235edd3a51b096471350aa389feeafb993333712274e5ae8973160e6490b5
