@@ -21,14 +21,6 @@ async function verifyChecksum(
   filePath: string,
   expectedSha256: string
 ): Promise<void> {
-  if (!expectedSha256) {
-    throw new Error(
-      `No SHA256 checksum available for ${path.basename(filePath)}. ` +
-      `This toolchain version cannot be verified. ` +
-      `Choose a different version or contribute a checksum via pull request.`
-    );
-  }
-
   const hash = crypto.createHash("sha256");
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath comes from tc.downloadTool(), not external input
   const stream = fs.createReadStream(filePath);
@@ -56,13 +48,27 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function downloadToolWithRetry(url: string): Promise<string> {
+/** HTTP 4xx (except 408/429) won't get better on retry; tool-cache's HTTPError carries the status. */
+function isClientError(err: unknown): boolean {
+  const status = (err as { httpStatusCode?: number } | undefined)?.httpStatusCode;
+  return status !== undefined && status >= 400 && status < 500 && status !== 408 && status !== 429;
+}
+
+/** Downloads and verifies the archive, retrying both network failures and corrupt (checksum-mismatched) downloads. */
+async function downloadVerifiedWithRetry(entry: ToolchainEntry): Promise<string> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= DOWNLOAD_MAX_ATTEMPTS; attempt++) {
+    let archivePath: string | undefined;
     try {
-      return await tc.downloadTool(url);
+      archivePath = await tc.downloadTool(entry.url);
+      core.info("🔒 Verifying SHA256...");
+      await verifyChecksum(archivePath, entry.sha256);
+      return archivePath;
     } catch (err) {
       lastError = err;
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- archivePath comes from tc.downloadTool()
+      if (archivePath !== undefined) fs.rmSync(archivePath, { force: true });
+      if (isClientError(err)) break;
       if (attempt < DOWNLOAD_MAX_ATTEMPTS) {
         core.info(
           `Download attempt ${attempt}/${DOWNLOAD_MAX_ATTEMPTS} failed: ${
@@ -123,22 +129,28 @@ function findToolchainRoot(installDir: string): string {
   return entries.length === 1 ? path.join(installDir, entries[0]) : installDir;
 }
 
-/**
- * Derives the binary name to probe for. Most toolchain names are a bare
- * triplet (e.g. arm-none-eabi) and the binary adds "-gcc" on top. A few
- * names (x86_64-w64-mingw32-gcc) already *are* the full binary name, so
- * don't double it up. "x86_64-gcc" is the one true exception: "no cross
- * prefix" means the binary is plain "gcc".
- */
-export function probeBinaryName(toolchainName: string): string {
-  if (toolchainName === "x86_64-gcc") return "gcc";
-  return toolchainName.endsWith("-gcc") ? toolchainName : `${toolchainName}-gcc`;
+/** RUNNER_TEMP, which every GitHub Actions job (hosted or self-hosted) sets. */
+function runnerTemp(): string {
+  const dir = process.env.RUNNER_TEMP;
+  if (!dir) throw new Error("RUNNER_TEMP is not set; this action must run inside a GitHub Actions job.");
+  return dir;
 }
 
-async function verifyOnPath(binPath: string, toolchainName: string): Promise<void> {
-  const probe = probeBinaryName(toolchainName);
+/**
+ * Derives the tool prefix (what goes before "gcc") from the toolchain name. Most names
+ * are a bare triplet (arm-none-eabi -> "arm-none-eabi-"); a few (x86_64-w64-mingw32-gcc)
+ * already are the full binary name; "x86_64-gcc" means no prefix at all. Names that
+ * don't follow the binaries (winlibs) set `prefix:` in the database instead.
+ */
+export function toolchainPrefix(toolchainName: string): string {
+  if (toolchainName === "x86_64-gcc") return "";
+  return toolchainName.endsWith("-gcc") ? toolchainName.slice(0, -"gcc".length) : `${toolchainName}-`;
+}
+
+/** Checks `<prefix>gcc` runs and returns its full version, or "" if the binary isn't there. */
+async function verifyOnPath(binPath: string, prefix: string): Promise<string> {
   const ext = process.platform === "win32" ? ".exe" : "";
-  const binaryPath = path.join(binPath, probe + ext);
+  const binaryPath = path.join(binPath, `${prefix}gcc${ext}`);
 
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- binaryPath is derived from the already-validated installDir
   if (!fs.existsSync(binaryPath)) {
@@ -147,16 +159,21 @@ async function verifyOnPath(binPath: string, toolchainName: string): Promise<voi
       `Expected binary not found at ${binaryPath}. ` +
       `Verify the toolchain name or check the archive contents.`
     );
-    return;
+    return "";
   }
 
-  let output = "";
-  await exec.exec(`"${binaryPath}"`, ["--version"], {
-    silent: true,
-    ignoreReturnCode: true,
-    listeners: { stdout: (d) => { output += d.toString(); } },
-  });
-  core.info(`✅ Verified: ${output.split("\n")[0].trim()}`);
+  const run = async (args: string[]): Promise<string> => {
+    let output = "";
+    await exec.exec(`"${binaryPath}"`, args, {
+      silent: true,
+      ignoreReturnCode: true,
+      listeners: { stdout: (d) => { output += d.toString(); } },
+    });
+    return output;
+  };
+  core.info(`✅ Verified: ${(await run(["--version"])).split("\n")[0].trim()}`);
+  // -dumpversion as well: GCC < 7 has no -dumpfullversion and answers this pair with -dumpversion.
+  return (await run(["-dumpfullversion", "-dumpversion"])).trim();
 }
 
 interface RunInputs {
@@ -166,7 +183,8 @@ interface RunInputs {
   useRemoteCache: boolean;
   useLocalCache: boolean;
   localCacheLocation: string | undefined;
-  setLdLibraryPath: boolean;
+  /** undefined when not set: then only native toolchains (empty prefix) get LD_LIBRARY_PATH. */
+  setLdLibraryPath: boolean | undefined;
 }
 
 const CACHE_STRATEGIES = ["none", "local", "remote", "both"] as const;
@@ -204,7 +222,7 @@ export function readInputs(): RunInputs {
     useRemoteCache,
     useLocalCache,
     localCacheLocation,
-    setLdLibraryPath: core.getInput("set-ld-library-path") !== "false",
+    setLdLibraryPath: core.getInput("set-ld-library-path") === "" ? undefined : core.getBooleanInput("set-ld-library-path"),
   };
 }
 
@@ -233,10 +251,11 @@ function localArchivePathFor(localCacheLocation: string, entry: ToolchainEntry):
 }
 
 /**
- * Returns the cached archive path if a local cache entry exists and passes checksum
- * verification, `undefined` on a cache miss. A failed/unreadable entry is treated as a
- * miss and best-effort deleted — deletion failure only logs a warning, since falling
- * back to a fresh download is always safe.
+ * Returns a private, verified copy of the cached archive if a cache entry exists and passes
+ * checksum verification, `undefined` on a cache miss. The copy (in RUNNER_TEMP) is what gets
+ * verified and extracted, so a shared cache file changed after the check is never used.
+ * A failed/unreadable entry is treated as a miss and best-effort deleted — deletion failure
+ * only logs a warning, since falling back to a fresh download is always safe.
  */
 async function tryLocalCache(
   entry: ToolchainEntry,
@@ -247,14 +266,17 @@ async function tryLocalCache(
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- localArchivePath is derived from validated localCacheLocation + basename(url)
   if (!fs.existsSync(localArchivePath)) return undefined;
 
-  core.info(`💾 Found ${archiveName} in local cache, verifying...`);
+  core.info(`💾 Found ${archiveName} in cache, verifying...`);
+  const privateCopy = path.join(fs.mkdtempSync(path.join(runnerTemp(), "setup-gcc-toolchain-")), archiveName);
   try {
-    await verifyChecksum(localArchivePath, entry.sha256);
-    core.info("✅ Local cache checksum OK.");
-    return localArchivePath;
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- both paths are derived from validated directories
+    fs.copyFileSync(localArchivePath, privateCopy);
+    await verifyChecksum(privateCopy, entry.sha256);
+    core.info("✅ Cache checksum OK.");
+    return privateCopy;
   } catch (err) {
     core.warning(
-      `Local cache entry failed checksum verification, re-downloading: ${
+      `Cache entry failed checksum verification, re-downloading: ${
         err instanceof Error ? err.message : String(err)
       }`
     );
@@ -282,14 +304,14 @@ async function tryLocalCache(
 function saveToLocalCache(entry: ToolchainEntry, archivePath: string, localCacheLocation: string): void {
   try {
     const localArchivePath = localArchivePathFor(localCacheLocation, entry);
-    const tmpPath = `${localArchivePath}.${process.pid}.tmp`;
+    const tmpPath = `${localArchivePath}.${crypto.randomUUID()}.tmp`;
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- localCacheLocation is a validated input
-    fs.mkdirSync(localCacheLocation, { recursive: true });
+    fs.mkdirSync(localCacheLocation, { recursive: true, mode: 0o750 });
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- archivePath comes from tc.downloadTool(), tmpPath is derived from validated localCacheLocation
     fs.copyFileSync(archivePath, tmpPath);
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- tmpPath/localArchivePath are derived from validated localCacheLocation; rename is atomic on the same filesystem
     fs.renameSync(tmpPath, localArchivePath);
-    core.info(`💾 Saved to local cache: ${localArchivePath}`);
+    core.info(`💾 Cached archive: ${localArchivePath}`);
   } catch (err) {
     core.warning(
       `Could not save to local cache (continuing without it): ${
@@ -312,6 +334,13 @@ export async function fetchArchive(
   localCacheLocation: string | undefined
 ): Promise<string> {
   const archiveName = path.basename(entry.url);
+  if (!entry.sha256) {
+    throw new Error(
+      `No SHA256 checksum available for ${archiveName}. ` +
+      `This toolchain version cannot be verified. ` +
+      `Choose a different version or contribute a checksum via pull request.`
+    );
+  }
 
   if (useLocalCache && localCacheLocation !== undefined) {
     const cached = await tryLocalCache(entry, archiveName, localCacheLocation);
@@ -319,10 +348,7 @@ export async function fetchArchive(
   }
 
   core.info(`⬇️ Downloading ${archiveName}...`);
-  const archivePath = await downloadToolWithRetry(entry.url);
-
-  core.info("🔒 Verifying SHA256...");
-  await verifyChecksum(archivePath, entry.sha256);
+  const archivePath = await downloadVerifiedWithRetry(entry);
 
   if (useLocalCache && localCacheLocation !== undefined) {
     saveToLocalCache(entry, archivePath, localCacheLocation);
@@ -336,7 +362,12 @@ function isAlreadyInstalled(installDir: string): boolean {
   return fs.existsSync(installDir) && fs.readdirSync(installDir).length > 0;
 }
 
-/** Restores from remote cache, or downloads (via the local cache when enabled) and extracts into installDir. Returns whether a cache was hit. */
+/**
+ * Gets the archive from the remote cache (re-verified), the local cache or a download, and
+ * extracts it into installDir. The remote cache holds the archive, not the extracted tree, so
+ * a restored entry is checked against the database sha256 like any other. Returns whether a
+ * verified remote cache entry was used.
+ */
 export async function installToolchain(
   entry: ToolchainEntry,
   installDir: string,
@@ -346,22 +377,25 @@ export async function installToolchain(
   localCacheLocation: string | undefined
 ): Promise<boolean> {
   if (isAlreadyInstalled(installDir)) {
+    // Installed by an earlier step of this job; not a cache hit, and not re-verified.
     core.info(`✅ Already installed at ${installDir}, skipping download.`);
-    return true;
+    return false;
   }
 
+  const archiveName = path.basename(entry.url);
+  const remoteArchiveDir = `${installDir}-archive`;
+  let archivePath: string | undefined;
   if (useRemoteCache) {
-    const restoredKey = await cache.restoreCache([installDir], cacheKey);
+    const restoredKey = await cache.restoreCache([remoteArchiveDir], cacheKey);
     if (restoredKey !== undefined) {
       core.info(`♻️ Restored from remote cache: ${restoredKey}`);
-      return true;
+      archivePath = await tryLocalCache(entry, archiveName, remoteArchiveDir);
     }
   }
+  const cacheHit = archivePath !== undefined;
+  archivePath ??= await fetchArchive(entry, useLocalCache, localCacheLocation);
 
-  const archivePath = await fetchArchive(entry, useLocalCache, localCacheLocation);
-  const archiveName = path.basename(entry.url);
-
-  // Extract into a private, pid-suffixed temp dir and move it into place with a single
+  // Extract into a private, uniquely-named temp dir and move it into place with a single
   // atomic rename — the same temp-file + rename pattern saveToLocalCache uses above, applied
   // to the whole install directory. This is what makes two concurrent invocations of this
   // action for the same toolchain/version (e.g. parallel jobs on a shared self-hosted runner)
@@ -369,7 +403,7 @@ export async function installToolchain(
   // partially-written files, and rename() is atomic so exactly one of them ends up at
   // installDir. The loser's rename fails because installDir already exists non-empty; it
   // just discards its own (redundant but harmless) copy.
-  const tempInstallDir = `${installDir}.${process.pid}.tmp`;
+  const tempInstallDir = `${installDir}.${crypto.randomUUID()}.tmp`;
   core.startGroup(`Extracting ${archiveName}`);
   try {
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- tempInstallDir is derived from the already-validated installDir
@@ -401,10 +435,11 @@ export async function installToolchain(
     fs.rmSync(tempInstallDir, { recursive: true, force: true });
   }
 
-  if (useRemoteCache) {
+  if (useRemoteCache && !cacheHit) {
     core.info("☁️ Saving to remote cache...");
     try {
-      await cache.saveCache([installDir], cacheKey);
+      saveToLocalCache(entry, archivePath, remoteArchiveDir);
+      await cache.saveCache([remoteArchiveDir], cacheKey);
     } catch (err) {
       // Non-fatal: the cache key may already be reserved by another run with the same
       // toolchain/version/platform (e.g. this action invoked twice in one job, or two
@@ -417,7 +452,7 @@ export async function installToolchain(
       );
     }
   }
-  return false;
+  return cacheHit;
 }
 
 async function run(): Promise<void> {
@@ -434,18 +469,24 @@ async function run(): Promise<void> {
   const repoRoot = path.join(__dirname, "..");
   const entry = resolveToolchain(repoRoot, toolchainName, version, undefined, vendor);
 
-  const resolvedVersion = version === "latest"
-    ? path.basename(entry.url).match(/[\d.]+[-_][\d.]+/)?.[0] ?? version
-    : version;
+  const resolvedVersion = entry.version;
 
   core.info(`📦 Toolchain: ${toolchainName} @ ${resolvedVersion}`);
   core.info(`🔗 URL: ${entry.url}`);
   assertSupportedScheme(entry.url);
 
-  const runnerTemp = process.env.RUNNER_TEMP ?? "/tmp";
-  const installDir = path.join(runnerTemp, "gcc-toolchain", `${toolchainName}-${resolvedVersion}`);
-  assertWithinDir(runnerTemp, installDir);
-  const cacheKey = `setup-gcc-toolchain-v1-${toolchainName}-${resolvedVersion}-${process.platform}-${process.arch}`;
+  // vendor and sha256 in both: two entries of the same name and version never share a directory
+  // or a cache entry, and a database checksum change invalidates the cached archive.
+  const sha256 = entry.sha256.toLowerCase();
+  const tempDir = runnerTemp();
+  const installDir = path.join(
+    tempDir,
+    "gcc-toolchain",
+    `${entry.vendor}-${toolchainName}-${resolvedVersion}-${sha256.slice(0, 12)}`
+  );
+  assertWithinDir(tempDir, installDir);
+  const cacheKey =
+    `setup-gcc-toolchain-v2-${entry.vendor}-${toolchainName}-${resolvedVersion}-${sha256}-${process.platform}-${process.arch}`;
 
   const cacheHit = await installToolchain(
     entry,
@@ -467,12 +508,14 @@ async function run(): Promise<void> {
   // Prepend to PATH so this toolchain takes priority over any pre-installed one
   core.addPath(binPath);
 
+  const prefix = entry.prefix ?? toolchainPrefix(toolchainName);
   core.setOutput("toolchain-path", toolchainRoot);
   core.setOutput("cache-hit", String(cacheHit));
+  core.setOutput("prefix", prefix);
 
   core.info(`🛣️ Added to PATH (first position): ${binPath}`);
 
-  if (setLdLibraryPath) {
+  if (setLdLibraryPath ?? prefix === "") {
     const libDir = findLibDir(toolchainRoot);
     if (libDir !== undefined) {
       const existing = process.env.LD_LIBRARY_PATH;
@@ -481,9 +524,9 @@ async function run(): Promise<void> {
     }
   }
 
-  await verifyOnPath(binPath, toolchainName);
+  core.setOutput("gcc-version", await verifyOnPath(binPath, prefix));
 
-  // cacheHit only ever reflects a *remote* actions/cache restore (see installToolchain) —
+  // cacheHit only ever reflects a verified *remote* actions/cache restore (see installToolchain) —
   // stating it unconditionally would contradict a local-cache hit already logged above.
   const cacheNote = useRemoteCache ? ` (remote cache ${cacheHit ? "hit" : "miss"})` : "";
   core.info(`🎉 ${toolchainName} ${resolvedVersion} ready${cacheNote}.`);

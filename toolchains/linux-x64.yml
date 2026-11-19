@@ -6,6 +6,7 @@
 #   espressif:  https://github.com/espressif/crosstool-NG
 #   zakkemble:  https://github.com/ZakKemble/avr-gcc-build
 #   winlibs:    https://github.com/brechtsanders/winlibs_mingw
+#   bootlin:    https://toolchains.bootlin.com (x86_64 host only)
 
 platform: linux-x64
 
@@ -146,6 +147,40 @@ arm:
       "11.3.rel1":
         url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/11.3.rel1/arm-gnu-toolchain-11.3.rel1-x86_64-aarch64-none-linux-gnu.tar.xz
         sha256: 50cdef6c5baddaa00f60502cc8b59cc11065306ae575ad2f51e412a9b2a90364
+
+  aarch64_be-none-linux-gnu:
+    description: AArch64 big-endian Linux (glibc) — official ARM Ltd release
+    versions:
+      "15.3.rel2":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.3.rel2/arm-gnu-toolchain-15.3.rel2-x86_64-aarch64_be-none-linux-gnu.tar.xz
+        sha256: bdf8e9b4c62791c5c3aeeb8ba3791421d73c7d147dd04f0da502716885bcc1d2
+      "15.2.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.2.rel1/arm-gnu-toolchain-15.2.rel1-x86_64-aarch64_be-none-linux-gnu.tar.xz
+        sha256: f848f5b15d49217fbe8b3d72e1cc44eac06b096e6b66fa892898fa9c710a3c05
+      "14.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/14.3.rel1/arm-gnu-toolchain-14.3.rel1-x86_64-aarch64_be-none-linux-gnu.tar.xz
+        sha256: b9c7b070dd5f2c8b00a047cb810ccba5d05dab8e5ed687b779f0317ba44eeae7
+      "15.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/15.3.rel1/arm-gnu-toolchain-15.3.rel1-x86_64-aarch64_be-none-linux-gnu.tar.xz
+        sha256: d637d597f385402b370766b2179b666613688c2d4cd40ce35b3a83c132d15ac9
+      "14.2.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/14.2.rel1/arm-gnu-toolchain-14.2.rel1-x86_64-aarch64_be-none-linux-gnu.tar.xz
+        sha256: 0ea5d00d0ba4c5d16bc8e140d434c54367516b568a146d724936c589a2f56aaf
+      "13.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/13.3.rel1/arm-gnu-toolchain-13.3.rel1-x86_64-aarch64_be-none-linux-gnu.tar.xz
+        sha256: 55a2f073708c938ffe1d302859e5c3d6195b8bca3affa3d3aa6b2aafd79bf487
+      "13.2.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/13.2.Rel1/arm-gnu-toolchain-13.2.Rel1-x86_64-aarch64_be-none-linux-gnu.tar.xz
+        sha256: fe864b2b15127f58867a171cfcd639318609e734fbc8b78bb40258312a21a097
+      "12.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/12.3.rel1/arm-gnu-toolchain-12.3.rel1-x86_64-aarch64_be-none-linux-gnu.tar.xz
+        sha256: f5c1a36181fa201506618fab03979813ab9bf68c9e3d5e9c90c8a91e22ffeab3
+      "12.2.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/12.2.rel1/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64_be-none-linux-gnu.tar.xz
+        sha256: 47632b5594ed6c3efda92a55c4c330263fc22f5d845d9e1c7d969ce24fcedeea
+      "11.3.rel1":
+        url: https://gitlab.arm.com/api/v4/projects/10698/packages/generic/gnu-toolchain/11.3.rel1/arm-gnu-toolchain-11.3.rel1-x86_64-aarch64_be-none-linux-gnu.tar.xz
+        sha256: 5d52d4592b1b856b33fffe015f8ff37c8d1897fbc90e900d31cc6eb3809c46f0
 
 xpack:
 
@@ -655,3 +690,15 @@ zakkemble:
       "7.3.0":
         url: https://github.com/ZakKemble/avr-gcc-build/releases/download/v7.3.0-1/avr-gcc-7.3.0-x64-linux.tar.bz2
         sha256: 68dc18779d8f187aa496f5d670ee7ff6078538f0e232d4560ed528fefa5b8e0b
+
+bootlin:
+
+  riscv64-buildroot-linux-gnu:
+    description: RISC-V 64-bit Linux (glibc, lp64d) — Bootlin stable toolchain
+    versions:
+      "stable-2026.08-1":
+        url: https://toolchains.bootlin.com/downloads/releases/toolchains/riscv64-lp64d/tarballs/riscv64-lp64d--glibc--stable-2026.08-1.tar.xz
+        sha256: 5807565bd7af28d6be94d3e1a7da9f40d9a1875c741191a62c4c8024fd9467df
+      "stable-2025.08-1":
+        url: https://toolchains.bootlin.com/downloads/releases/toolchains/riscv64-lp64d/tarballs/riscv64-lp64d--glibc--stable-2025.08-1.tar.xz
+        sha256: 45209041e9ba5054aa9787c40bce0ac1e48b78528b6635b79dfb4253e1491ff0

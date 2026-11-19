@@ -10,8 +10,18 @@ export interface ToolchainEntry {
   sha256: string;
 }
 
+/** A database entry chosen by resolveToolchain(), with the version and vendor it was listed under. */
+export interface ResolvedToolchain extends ToolchainEntry {
+  version: string;
+  vendor: string;
+  /** Tool prefix (e.g. "x86_64-w64-mingw32-"), when it can't be derived from the toolchain name. */
+  prefix?: string;
+}
+
 export interface ToolchainDef {
   description: string;
+  /** See ResolvedToolchain.prefix. */
+  prefix?: string;
   versions: Record<string, ToolchainEntry>;
 }
 
@@ -138,7 +148,7 @@ function throwNoMatches(db: ToolchainDatabase, toolchainName: string, requestedV
     throw new Error(
       `Toolchain "${toolchainName}" not found for vendor "${requestedVendor}" on this platform.\n` +
       `Available vendors for this toolchain: ${Object.entries(db)
-        .filter(([, vd]) => toolchainName in vd)
+        .filter(([, vd]) => Object.hasOwn(vd, toolchainName))
         .map(([v]) => v)
         .join(", ") || "none"
       }`
@@ -153,12 +163,12 @@ function throwNoMatches(db: ToolchainDatabase, toolchainName: string, requestedV
 
 function assertNoVersionConflict(matches: VendorMatch[], toolchainName: string, requestedVersion: string): void {
   const providingVendors = matches
-    .filter(({ def }) => requestedVersion in def.versions)
+    .filter(({ def }) => Object.hasOwn(def.versions, requestedVersion))
     .map(({ vendor }) => vendor);
   if (providingVendors.length > 1) {
     throw new Error(
       `Version "${requestedVersion}" of toolchain "${toolchainName}" is provided by multiple vendors: ${providingVendors.join(", ")}.\n` +
-      `Specify a vendor explicitly, e.g. "${providingVendors[0]}/${toolchainName}".`
+      `Set the \`vendor\` input to choose one, e.g. \`vendor: ${providingVendors[0]}\`.`
     );
   }
 }
@@ -177,38 +187,46 @@ function assertNoLatestConflict(matches: VendorMatch[], toolchainName: string): 
     const vendors = tied.map((v) => v.vendor).join(", ");
     throw new Error(
       `Toolchain "${toolchainName}" latest version "${topVersion.version}" is provided by multiple vendors: ${vendors}.\n` +
-      `Specify a vendor explicitly, e.g. "${tied[0].vendor}/${toolchainName}".`
+      `Set the \`vendor\` input to choose one, e.g. \`vendor: ${tied[0].vendor}\`.`
     );
   }
 }
 
-function pickLatest(matches: VendorMatch[], toolchainName: string): ToolchainEntry {
+function pickLatest(matches: VendorMatch[], toolchainName: string): ResolvedToolchain {
   let bestEntry: ToolchainEntry | undefined;
+  let bestMatch: VendorMatch | undefined;
   let bestVersion = "";
-  for (const { def } of matches) {
-    for (const [ver, entry] of Object.entries(def.versions)) {
+  for (const match of matches) {
+    for (const [ver, entry] of Object.entries(match.def.versions)) {
       if (!bestVersion || compareVersions(ver, bestVersion) > 0) {
         bestVersion = ver;
         bestEntry = entry;
+        bestMatch = match;
       }
     }
   }
-  if (!bestEntry) {
+  if (!bestEntry || !bestMatch) {
     throw new Error(`Toolchain "${toolchainName}" has no versions available for this platform.`);
   }
   // The YAML database is cast to ToolchainDatabase without runtime validation,
   // so a malformed entry could still be missing sha256 despite the type.
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  return { url: bestEntry.url, sha256: bestEntry.sha256 ?? "" };
+  return {
+    url: bestEntry.url,
+    sha256: bestEntry.sha256 ?? "",
+    prefix: bestMatch.def.prefix,
+    version: bestVersion,
+    vendor: bestMatch.vendor,
+  };
 }
 
-function pickVersion(matches: VendorMatch[], toolchainName: string, requestedVersion: string): ToolchainEntry {
-  for (const { def } of matches) {
+function pickVersion(matches: VendorMatch[], toolchainName: string, requestedVersion: string): ResolvedToolchain {
+  for (const { vendor, def } of matches) {
     const found = Object.entries(def.versions).find(([ver]) => ver === requestedVersion);
     if (found) {
       const entry = found[1];
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- see pickLatest
-      return { url: entry.url, sha256: entry.sha256 ?? "" };
+      return { url: entry.url, sha256: entry.sha256 ?? "", prefix: def.prefix, version: requestedVersion, vendor };
     }
   }
 
@@ -227,7 +245,7 @@ export function resolveToolchain(
   requestedVersion: string,
   platform?: RunnerPlatform,
   requestedVendor?: string
-): ToolchainEntry {
+): ResolvedToolchain {
   const db = loadDatabase(repoRoot, platform);
   const matches = findVendorMatches(db, toolchainName, requestedVendor);
   if (matches.length === 0) throwNoMatches(db, toolchainName, requestedVendor);

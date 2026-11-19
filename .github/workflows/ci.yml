@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Lets the version-update bot start CI on its branch: its PRs, opened with GITHUB_TOKEN,
+  # trigger no pull_request runs.
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build-and-test:
@@ -98,6 +104,14 @@ jobs:
             toolchain: x86_64-gcc
             version: "latest"
             binary: gcc
+          - runner: ubuntu-latest
+            toolchain: aarch64_be-none-linux-gnu
+            version: "latest"
+            binary: aarch64_be-none-linux-gnu-gcc
+          - runner: ubuntu-latest
+            toolchain: riscv64-buildroot-linux-gnu
+            version: "latest"
+            binary: riscv64-buildroot-linux-gnu-gcc
           - runner: ubuntu-24.04-arm
             toolchain: arm-none-eabi
             version: "latest"
@@ -106,10 +120,23 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup ${{ matrix.toolchain }} ${{ matrix.version }}
+        id: setup
         uses: ./
         with:
           toolchain: ${{ matrix.toolchain }}
           version: ${{ matrix.version }}
+
+      - name: Verify prefix and gcc-version outputs
+        env:
+          PREFIX: ${{ steps.setup.outputs.prefix }}
+          GCC_VERSION: ${{ steps.setup.outputs.gcc-version }}
+          BINARY: ${{ matrix.binary }}
+        run: |
+          echo "prefix='$PREFIX' gcc-version='$GCC_VERSION'"
+          if [ -z "$GCC_VERSION" ]; then echo "ERROR: gcc-version output is empty"; exit 1; fi
+          if [ "$BINARY" != gcc ] && [ -z "$PREFIX" ]; then echo "ERROR: prefix output is empty"; exit 1; fi
+          if [ "${PREFIX}gcc" != "$BINARY" ]; then echo "ERROR: expected ${PREFIX}gcc to be $BINARY"; exit 1; fi
+          "${PREFIX}gcc" --version
 
       - name: Verify binary is on PATH and responds
         run: |

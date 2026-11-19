@@ -88,6 +88,30 @@ describe("resolveToolchain", () => {
     expect(entry.sha256).toHaveLength(64);
   });
 
+  it("resolves aarch64_be-none-linux-gnu on linux-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "aarch64_be-none-linux-gnu", "15.3.rel1", "linux-x64");
+    expect(entry.url).toContain("x86_64-aarch64_be-none-linux-gnu");
+    expect(entry.sha256).toHaveLength(64);
+    expect(entry.prefix).toBeUndefined();
+  });
+
+  it("reports the version it resolved, for latest as well", () => {
+    expect(resolveToolchain(REPO_ROOT, "aarch64_be-none-linux-gnu", "15.3.rel1", "linux-x64").version).toBe("15.3.rel1");
+    expect(resolveToolchain(REPO_ROOT, "aarch64_be-none-linux-gnu", "latest", "linux-x64").version).toBe("15.3.rel2");
+  });
+
+  it("aarch64_be-none-linux-gnu not available on linux-arm64 (Arm ships an x86_64 host only)", () => {
+    expect(() =>
+      resolveToolchain(REPO_ROOT, "aarch64_be-none-linux-gnu", "latest", "linux-arm64")
+    ).toThrow(/not found/);
+  });
+
+  it("resolves riscv64-buildroot-linux-gnu (bootlin) on linux-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "riscv64-buildroot-linux-gnu", "latest", "linux-x64");
+    expect(entry.url).toContain("riscv64-lp64d--glibc--stable");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
   it("resolves arm-none-eabi (xpack) on darwin-arm64", () => {
     const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "15.2.1-1.1", "darwin-arm64");
     expect(entry.url).toContain("darwin-arm64");
@@ -177,6 +201,17 @@ describe("resolveToolchain", () => {
     ).toThrow(/Available:/);
   });
 
+  it("reports Object.prototype names as not found instead of resolving them", () => {
+    expect(() => resolveToolchain(REPO_ROOT, "arm-none-eabi", "constructor", "linux-x64"))
+      .toThrow(/Version "constructor" not found/);
+    expect(() => resolveToolchain(REPO_ROOT, "toString", "latest", "linux-x64")).toThrow(/not found/);
+  });
+
+  it("returns the vendor the entry was resolved from", () => {
+    expect(resolveToolchain(REPO_ROOT, "arm-none-eabi", "14.2.rel1", "linux-x64").vendor).toBe("arm");
+    expect(resolveToolchain(REPO_ROOT, "arm-none-eabi", "15.2.1-1.1", "linux-x64").vendor).toBe("xpack");
+  });
+
   it("throws for unknown version with available versions list", () => {
     expect(() =>
       resolveToolchain(REPO_ROOT, "arm-none-eabi", "0.0.1", "linux-x64")
@@ -193,6 +228,13 @@ describe("resolveToolchain", () => {
     const entry = resolveToolchain(REPO_ROOT, "riscv32-esp-elf", "latest", "windows-x64");
     expect(entry.url).toContain("x86_64-w64-mingw32");
     expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("returns the database prefix for winlibs, whose names don't match its binaries", () => {
+    expect(resolveToolchain(REPO_ROOT, "x86_64-w64-mingw32-ucrt", "latest", "windows-x64").prefix)
+      .toBe("x86_64-w64-mingw32-");
+    expect(resolveToolchain(REPO_ROOT, "i686-w64-mingw32-msvcrt", "latest", "windows-x64").prefix)
+      .toBe("i686-w64-mingw32-");
   });
 
   it("resolves xpack x86_64-w64-mingw32-gcc on windows-x64", () => {
@@ -214,6 +256,13 @@ describe("compareVersions", () => {
 
   it("compares underscore-separated date suffixes numerically", () => {
     expect(compareVersions("13.2.0_20240530", "13.2.0_20240305")).toBeGreaterThan(0);
+  });
+
+  it("compares mixed alphanumeric parts by digit and non-digit runs", () => {
+    expect(compareVersions("15.3.rel10", "15.3.rel9")).toBeGreaterThan(0);
+    expect(compareVersions("15.3.rel9", "15.3.rel10")).toBeLessThan(0);
+    expect(compareVersions("stable-2026.08-1", "stable-2025.08-1")).toBeGreaterThan(0);
+    expect(compareVersions("16.1.0posix-r10", "16.1.0posix-r2")).toBeGreaterThan(0);
   });
 
   it("is reflexive for equal versions", () => {

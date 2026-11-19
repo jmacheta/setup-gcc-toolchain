@@ -582,6 +582,7 @@ winlibs:
 
   x86_64-w64-mingw32-ucrt:
     description: MinGW-w64 x86_64, UCRT runtime
+    prefix: x86_64-w64-mingw32-
     versions:
       "16.2.0":
         url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.2.0posix-14.0.0-ucrt-r1/winlibs-x86_64-posix-seh-gcc-16.2.0-mingw-w64ucrt-14.0.0-r1.zip
@@ -625,6 +626,7 @@ winlibs:
 
   x86_64-w64-mingw32-msvcrt:
     description: MinGW-w64 x86_64, legacy MSVCRT runtime
+    prefix: x86_64-w64-mingw32-
     versions:
       "16.2.0":
         url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.2.0posix-14.0.0-msvcrt-r1/winlibs-x86_64-posix-seh-gcc-16.2.0-mingw-w64msvcrt-14.0.0-r1.zip
@@ -668,6 +670,7 @@ winlibs:
 
   i686-w64-mingw32-ucrt:
     description: MinGW-w64 i686 32-bit, UCRT runtime
+    prefix: i686-w64-mingw32-
     versions:
       "16.2.0":
         url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.2.0posix-14.0.0-ucrt-r1/winlibs-i686-posix-dwarf-gcc-16.2.0-mingw-w64ucrt-14.0.0-r1.zip
@@ -711,6 +714,7 @@ winlibs:
 
   i686-w64-mingw32-msvcrt:
     description: MinGW-w64 i686 32-bit, legacy MSVCRT runtime
+    prefix: i686-w64-mingw32-
     versions:
       "16.2.0":
         url: https://github.com/brechtsanders/winlibs_mingw/releases/download/16.2.0posix-14.0.0-msvcrt-r1/winlibs-i686-posix-dwarf-gcc-16.2.0-mingw-w64msvcrt-14.0.0-r1.zip

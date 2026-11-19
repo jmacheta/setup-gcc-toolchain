@@ -8,6 +8,9 @@ on:
 # Test every toolchain at every version across all supported platforms.
 # This catches regressions in older versions and validates the full database.
 
+permissions:
+  contents: read
+
 jobs:
   matrix-linux-x64:
     name: ${{ matrix.toolchain }} ${{ matrix.version }} (linux-x64)
@@ -164,6 +167,10 @@ jobs:
           if [ "${{ steps.first.outputs.cache-hit }}" = "true" ]; then
             echo "WARNING: unexpected cache hit on first install (stale cache from previous run)"
           fi
+        shell: bash
+
+      - name: Remove the first install, so the second one goes through the remote cache
+        run: rm -rf "$RUNNER_TEMP/gcc-toolchain"
         shell: bash
 
       - name: Second install (should hit cache)

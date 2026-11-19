@@ -26,7 +26,9 @@
  *      carry their sha256 directly in the GitLab package_files API response.
  *
  * A release newer than what's known but with no matching asset is reported
- * as "unresolved" rather than silently skipped or guessed.
+ * as "unresolved" rather than silently skipped or guessed. Toolchains this
+ * script can't check (not hosted on GitHub Releases or Arm's GitLab, e.g.
+ * Bootlin, or keys without a GCC version) are listed as "manual update".
  *
  * Usage:
  *   node scripts/check-new-versions.mjs [--out <path>] [--dry-run]
@@ -40,6 +42,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
+import { compareVersions } from "../shared/compare-versions.mjs";
 
 const require = createRequire(import.meta.url);
 const yaml = require("js-yaml");
@@ -91,18 +94,9 @@ const VERSION_RE = /(\d+)\.(\d+)\.(?:rel)?(\d+)/i;
 const PRERELEASE_RE = /snapshot|alpha|beta|-rc\d*$/i;
 const CHECKSUM_LINE_RE = /^([0-9a-f]{64})\s+\*?(.+?)\s*$/i;
 
+/** The GCC version inside a tag or key ("v15.2.1-1.1" -> "15.2.1", "14.2.rel1" as is), or null. */
 function parseVersion(str) {
-  const m = str.match(VERSION_RE);
-  if (!m) return null;
-  return [Number(m[1]), Number(m[2]), Number(m[3])];
-}
-
-function compareVersions(a, b) {
-  const [aMajor, aMinor, aPatch] = a;
-  const [bMajor, bMinor, bPatch] = b;
-  if (aMajor !== bMajor) return aMajor - bMajor;
-  if (aMinor !== bMinor) return aMinor - bMinor;
-  return aPatch - bPatch;
+  return str.match(VERSION_RE)?.[0] ?? null;
 }
 
 function basenameOf(url) {
@@ -321,6 +315,7 @@ function insertVersion(text, vendor, toolchain, newKey, url, sha256) {
 
 const applied = []; // { file, vendor, toolchain, oldKey, newKey, url }
 const unresolved = []; // { vendor, toolchain, oldKey, sawNewer, reason }
+const manual = new Set(); // "vendor/toolchain" this script can't check upstream
 
 for (const file of DB_FILES) {
   const filePath = path.join(REPO_ROOT, file);
@@ -336,7 +331,10 @@ for (const file of DB_FILES) {
       const entries = Object.entries(def.versions ?? {})
         .map(([key, entry]) => ({ key, version: parseVersion(key), url: entry.url }))
         .filter((e) => e.version);
-      if (entries.length === 0) continue;
+      if (entries.length === 0) {
+        manual.add(`${vendor}/${toolchain}`);
+        continue;
+      }
       entries.sort((a, b) => compareVersions(b.version, a.version));
       const current = entries[0];
 
@@ -346,7 +344,10 @@ for (const file of DB_FILES) {
           candidates = await getArmCandidates();
         } else {
           const m = current.url.match(GITHUB_RELEASE_RE);
-          if (!m) continue; // not a vendor we know how to check upstream
+          if (!m) {
+            manual.add(`${vendor}/${toolchain}`);
+            continue;
+          }
           candidates = await getGithubCandidates(m[1], m[2]);
         }
       } catch (err) {
@@ -394,7 +395,12 @@ if (unresolved.length > 0) {
   }
   lines.push("");
 }
-if (lines.length === 0) lines.push("No new upstream toolchain versions found.");
+if (lines.length === 0) lines.push("No new upstream toolchain versions found.\n");
+if (manual.size > 0) {
+  lines.push("Manual update (not checked automatically, see CONTRIBUTING.md):\n");
+  for (const name of manual) lines.push(`- **${name}**`);
+  lines.push("");
+}
 
 const report = lines.join("\n") + "\n";
 console.log(report);
