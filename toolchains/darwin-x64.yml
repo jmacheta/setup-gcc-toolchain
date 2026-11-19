@@ -46,6 +46,9 @@ espressif:
   xtensa-esp-elf:
     description: Xtensa bare-metal for ESP32/ESP32-S2/S3
     versions:
+      "16.2.0_20261109":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.2.0_20261109/xtensa-esp-elf-16.2.0_20261109-x86_64-apple-darwin.tar.xz
+        sha256: 117e79a903437e6c0a9eed9f4728e68df6251ac89f04cd5b9eaf2116d06718a8
       "16.1.0_20260609":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.1.0_20260609/xtensa-esp-elf-16.1.0_20260609-x86_64-apple-darwin.tar.xz
         sha256: c79d365223cec0e876fe0b25970a155ba9cddc2ee4130173944efe0ce1370d89

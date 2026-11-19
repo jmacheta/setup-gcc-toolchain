@@ -444,6 +444,9 @@ espressif:
   xtensa-esp-elf:
     description: Xtensa bare-metal for ESP32/ESP32-S2/S3
     versions:
+      "16.2.0_20261109":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.2.0_20261109/xtensa-esp-elf-16.2.0_20261109-aarch64-linux-gnu.tar.xz
+        sha256: c900eab5483fba42b6ba43fe2b7a411ec8d3aaaa304fe666ba6753ebdf6acc48
       "16.1.0_20260609":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.1.0_20260609/xtensa-esp-elf-16.1.0_20260609-aarch64-linux-gnu.tar.xz
         sha256: 785ee242bfbdb3ac4e764e85d2f87109c7c5f3da57d742da9a7c58c0d0906149
@@ -508,6 +511,9 @@ espressif:
   riscv32-esp-elf:
     description: RISC-V bare-metal for ESP32-C/H series
     versions:
+      "16.2.0_20261109":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.2.0_20261109/riscv32-esp-elf-16.2.0_20261109-aarch64-linux-gnu.tar.xz
+        sha256: eb4299b837f12c96c2fb19712ec8bf3e9737b4102b27522a9130613346a475a7
       "16.1.0_20260609":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.1.0_20260609/riscv32-esp-elf-16.1.0_20260609-aarch64-linux-gnu.tar.xz
         sha256: d669ad2d452caf0f7887262cd1b2ce44921e2ffd8ee3e94062b50ac655dfb382
