@@ -5,6 +5,9 @@ on:
     - cron: "0 3 * * 0"  # 03:00 UTC every Sunday
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   validate-urls:
     name: Validate all URLs

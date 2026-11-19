@@ -9,20 +9,21 @@ branding:
 inputs:
   toolchain:
     description: >
-      Toolchain variant to install. Available: arm-none-eabi, aarch64-none-elf,
-      arm-none-linux-gnueabihf, aarch64-none-linux-gnu,
-      riscv-none-elf, xtensa-esp-elf, riscv32-esp-elf, avr
+      Toolchain variant to install, e.g. arm-none-eabi, aarch64-none-linux-gnu,
+      riscv-none-elf, xtensa-esp-elf, avr or x86_64-gcc. The full list per runner
+      platform is the "Supported toolchains" table in the README.
     required: true
   vendor:
     description: >
       Toolchain vendor to use when multiple vendors provide the same toolchain name
-      (e.g. "xpack" or "arm" for arm-none-eabi). Optional — omit to use the first
-      available vendor; an error is raised if the requested version is ambiguous.
+      (e.g. "xpack" or "arm" for arm-none-eabi). Optional: without it an exact version
+      comes from the vendor that lists it (an error if several do), and "latest" is the
+      highest version across all vendors, so set it with "latest" to stay on one vendor.
     required: false
     default: ""
   version:
     description: >
-      Toolchain version to install (e.g. "15.2.1-1.1" for xPack, "esp-14.2.0_20241119"
+      Toolchain version to install (e.g. "15.2.1-1.1" for xPack, "14.2.0_20241119"
       for Espressif, "14.1.0" for ZakKemble AVR). Use "latest" or omit to install the
       newest available version.
     required: false
@@ -51,16 +52,29 @@ inputs:
     description: >
       Prepend the toolchain's lib/lib64 directory to LD_LIBRARY_PATH so binaries
       built with it link against its bundled libstdc++/libgcc at runtime instead
-      of an older system one (avoids "GLIBCXX_x.y.z not found" errors). Set to
-      "false" to leave LD_LIBRARY_PATH untouched.
+      of an older system one (avoids "GLIBCXX_x.y.z not found" errors). Left empty
+      (the default), this is done only for native toolchains (empty prefix, e.g.
+      x86_64-gcc): a cross toolchain's target libraries would break host programs.
+      Set to "true" or "false" to decide explicitly.
     required: false
-    default: "true"
+    default: ""
 
 outputs:
   toolchain-path:
     description: Path to the installed toolchain root directory
   cache-hit:
-    description: Whether the toolchain was restored from cache
+    description: >
+      "true" if the toolchain archive was restored from the remote cache (actions/cache)
+      and passed sha256 verification; "false" for a download, a local cache hit, or a
+      toolchain already installed by an earlier step of the same job
+  prefix:
+    description: >
+      Tool prefix, e.g. "aarch64_be-none-linux-gnu-", so "${prefix}gcc" names the
+      compiler (empty for a native toolchain such as x86_64-gcc)
+  gcc-version:
+    description: >
+      Full GCC version reported by "<prefix>gcc -dumpfullversion" (e.g. "15.2.1"),
+      empty if the compiler binary was not found
 
 runs:
   using: node24

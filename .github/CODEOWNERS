@@ -2,4 +2,4 @@
 * @jmacheta
 
 # Toolchain database — changes here trigger smoke tests automatically
-toolchains-*.yml @jmacheta
+/toolchains/ @jmacheta

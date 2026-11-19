@@ -29,6 +29,9 @@ jest.unstable_mockModule("@actions/cache", () => ({
 
 const { fetchArchive, installToolchain, readInputs } = await import("../src/index.js");
 
+// Private copies of cached archives go here; the action itself requires RUNNER_TEMP.
+process.env.RUNNER_TEMP = fs.mkdtempSync(path.join(os.tmpdir(), "runner-temp-"));
+
 const inputEnvKeys = (name: string): string => `INPUT_${name.replace(/ /g, "_").toUpperCase()}`;
 
 describe("fetchArchive (local cache)", () => {
@@ -58,8 +61,25 @@ describe("fetchArchive (local cache)", () => {
 
     const result = await fetchArchive(entry, true, localCacheLocation);
 
-    expect(result).toBe(cachedArchivePath);
+    // a private copy in RUNNER_TEMP, so the shared file can't change between check and extract
+    expect(result).not.toBe(cachedArchivePath);
+    expect(result.startsWith(process.env.RUNNER_TEMP ?? "")).toBe(true);
+    expect(fs.readFileSync(result, "utf8")).toBe("genuine archive contents");
     expect(downloadToolMock).not.toHaveBeenCalled();
+  });
+
+  it("fails clearly when RUNNER_TEMP is unset instead of using a shared directory", async () => {
+    const sha256 = crypto.createHash("sha256").update("genuine archive contents").digest("hex");
+    fs.writeFileSync(path.join(localCacheLocation, `${sha256}-toolchain-1.0.0.tar.gz`), "genuine archive contents");
+    const saved = process.env.RUNNER_TEMP;
+    delete process.env.RUNNER_TEMP;
+    try {
+      await expect(
+        fetchArchive({ url: "https://example.com/dist/toolchain-1.0.0.tar.gz", sha256 }, true, localCacheLocation)
+      ).rejects.toThrow(/RUNNER_TEMP is not set/);
+    } finally {
+      process.env.RUNNER_TEMP = saved;
+    }
   });
 
   it("falls back to downloading when the local cache entry fails checksum verification", async () => {
@@ -81,14 +101,45 @@ describe("fetchArchive (local cache)", () => {
   });
 
   it("rejects a download whose checksum doesn't match the toolchain database entry", async () => {
-    fs.writeFileSync(downloadedPath, "genuine archive contents");
     const entry: ToolchainEntry = {
       url: "https://example.com/dist/toolchain-1.0.0.tar.gz",
       sha256: "0".repeat(64),
     };
-    downloadToolMock.mockResolvedValue(downloadedPath);
+    downloadToolMock.mockImplementation(async () => {
+      fs.writeFileSync(downloadedPath, "genuine archive contents");
+      return downloadedPath;
+    });
 
     await expect(fetchArchive(entry, true, localCacheLocation)).rejects.toThrow(/SHA256 mismatch/);
+    // each corrupt download is deleted and retried
+    expect(downloadToolMock).toHaveBeenCalledTimes(3);
+    expect(fs.existsSync(downloadedPath)).toBe(false);
+  });
+
+  it("retries a corrupt download and returns the next, good one", async () => {
+    const entry: ToolchainEntry = {
+      url: "https://example.com/dist/toolchain-1.0.0.tar.gz",
+      sha256: crypto.createHash("sha256").update("genuine archive contents").digest("hex"),
+    };
+    let calls = 0;
+    downloadToolMock.mockImplementation(async () => {
+      fs.writeFileSync(downloadedPath, ++calls === 1 ? "truncated" : "genuine archive contents");
+      return downloadedPath;
+    });
+
+    const result = await fetchArchive(entry, false, undefined);
+
+    expect(downloadToolMock).toHaveBeenCalledTimes(2);
+    expect(fs.readFileSync(result, "utf8")).toBe("genuine archive contents");
+  });
+
+  it("does not retry an HTTP 4xx", async () => {
+    const notFound = Object.assign(new Error("Unexpected HTTP response: 404"), { httpStatusCode: 404 });
+    downloadToolMock.mockRejectedValue(notFound);
+    const entry: ToolchainEntry = { url: "https://example.com/dist/toolchain-1.0.0.tar.gz", sha256: "0".repeat(64) };
+
+    await expect(fetchArchive(entry, false, undefined)).rejects.toThrow(/404/);
+    expect(downloadToolMock).toHaveBeenCalledTimes(1);
   });
 
   it("never trusts a cached entry when the database has no checksum for it", async () => {
@@ -98,10 +149,10 @@ describe("fetchArchive (local cache)", () => {
     downloadToolMock.mockResolvedValue(downloadedPath);
     const entry: ToolchainEntry = { url: "https://example.com/dist/toolchain-1.0.0.tar.gz", sha256: "" };
 
-    // No checksum to verify against means the archive can never be trusted — the cached
-    // entry is rejected, and the fresh download that follows fails the same way.
+    // No checksum to verify against means the archive can never be trusted — neither the
+    // cached entry nor a download is used.
     await expect(fetchArchive(entry, true, localCacheLocation)).rejects.toThrow(/No SHA256 checksum available/);
-    expect(downloadToolMock).toHaveBeenCalledTimes(1);
+    expect(downloadToolMock).not.toHaveBeenCalled();
   });
 
   it("populates the local cache atomically, leaving no temp file behind", async () => {
@@ -218,18 +269,52 @@ describe("installToolchain (remote cache)", () => {
 
   afterEach(() => {
     fs.rmSync(installDir, { recursive: true, force: true });
+    fs.rmSync(`${installDir}-archive`, { recursive: true, force: true });
   });
 
-  it("on a remote cache hit, skips downloading, extracting, and re-uploading", async () => {
-    restoreCacheMock.mockResolvedValue("some-cache-key");
-    const entry: ToolchainEntry = { url: "https://example.com/dist/toolchain-1.0.0.tar.gz", sha256: "irrelevant" };
+  /** A remote cache restore that puts `contents` where the cached archive of `entry` goes. */
+  function restoreArchive(entry: ToolchainEntry, contents: string): void {
+    restoreCacheMock.mockImplementation(async () => {
+      fs.mkdirSync(`${installDir}-archive`, { recursive: true });
+      fs.writeFileSync(path.join(`${installDir}-archive`, `${entry.sha256}-toolchain-1.0.0.tar.gz`), contents);
+      return "some-cache-key";
+    });
+  }
+
+  it("on a remote cache hit, verifies and extracts the archive without downloading or re-uploading", async () => {
+    const entry: ToolchainEntry = {
+      url: "https://example.com/dist/toolchain-1.0.0.tar.gz",
+      sha256: crypto.createHash("sha256").update("genuine archive contents").digest("hex"),
+    };
+    restoreArchive(entry, "genuine archive contents");
 
     const cacheHit = await installToolchain(entry, installDir, "cache-key", true, false, undefined);
 
     expect(cacheHit).toBe(true);
     expect(downloadToolMock).not.toHaveBeenCalled();
-    expect(extractTarMock).not.toHaveBeenCalled();
+    expect(extractTarMock).toHaveBeenCalledTimes(1);
     expect(saveCacheMock).not.toHaveBeenCalled();
+  });
+
+  it("downloads instead when the remote cache restores a tampered archive", async () => {
+    const downloadedPath = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "download-")), "toolchain-1.0.0.tar.gz");
+    fs.writeFileSync(downloadedPath, "genuine archive contents");
+    const entry: ToolchainEntry = {
+      url: "https://example.com/dist/toolchain-1.0.0.tar.gz",
+      sha256: crypto.createHash("sha256").update("genuine archive contents").digest("hex"),
+    };
+    restoreArchive(entry, "tampered contents");
+    downloadToolMock.mockResolvedValue(downloadedPath);
+
+    try {
+      const cacheHit = await installToolchain(entry, installDir, "cache-key", true, false, undefined);
+
+      expect(cacheHit).toBe(false);
+      expect(downloadToolMock).toHaveBeenCalledTimes(1);
+      expect(extractTarMock).toHaveBeenCalledWith(downloadedPath, expect.any(String), "xz");
+    } finally {
+      fs.rmSync(path.dirname(downloadedPath), { recursive: true, force: true });
+    }
   });
 
   it("on a remote cache miss, downloads, extracts, and uploads to the remote cache", async () => {
@@ -247,19 +332,21 @@ describe("installToolchain (remote cache)", () => {
       expect(cacheHit).toBe(false);
       expect(downloadToolMock).toHaveBeenCalledTimes(1);
       expect(extractTarMock).toHaveBeenCalledTimes(1);
-      expect(saveCacheMock).toHaveBeenCalledTimes(1);
+      // the archive, not the extracted tree, goes to the remote cache
+      expect(saveCacheMock).toHaveBeenCalledWith([`${installDir}-archive`], "cache-key");
+      expect(fs.readdirSync(`${installDir}-archive`)).toEqual([`${entry.sha256}-toolchain-1.0.0.tar.gz`]);
     } finally {
       fs.rmSync(path.dirname(downloadedPath), { recursive: true, force: true });
     }
   });
 
-  it("skips download entirely when installDir is already populated", async () => {
+  it("skips download entirely when installDir is already populated, without reporting a cache hit", async () => {
     fs.writeFileSync(path.join(installDir, "gcc"), "already installed");
     const entry: ToolchainEntry = { url: "https://example.com/dist/toolchain-1.0.0.tar.gz", sha256: "irrelevant" };
 
     const cacheHit = await installToolchain(entry, installDir, "cache-key", true, false, undefined);
 
-    expect(cacheHit).toBe(true);
+    expect(cacheHit).toBe(false);
     expect(restoreCacheMock).not.toHaveBeenCalled();
     expect(downloadToolMock).not.toHaveBeenCalled();
   });
@@ -471,5 +558,13 @@ describe("readInputs (cache-strategy resolution)", () => {
     process.env.SETUP_GCC_TOOLCHAIN_LOCAL_CACHE_LOCATION = "/from/env";
 
     expect(readInputs().localCacheLocation).toBe("/from/env");
+  });
+
+  it("leaves set-ld-library-path undecided unless set, so the toolchain kind decides", () => {
+    expect(readInputs().setLdLibraryPath).toBeUndefined();
+    process.env[inputEnvKeys("set-ld-library-path")] = "false";
+    expect(readInputs().setLdLibraryPath).toBe(false);
+    process.env[inputEnvKeys("set-ld-library-path")] = "true";
+    expect(readInputs().setLdLibraryPath).toBe(true);
   });
 });

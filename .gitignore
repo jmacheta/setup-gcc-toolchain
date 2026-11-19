@@ -7,3 +7,4 @@ Thumbs.db
 *.log
 .env
 .env.local
+.vscode/
