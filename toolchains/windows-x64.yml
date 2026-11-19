@@ -417,6 +417,9 @@ espressif:
   xtensa-esp-elf:
     description: Xtensa bare-metal for ESP32/ESP32-S2/S3
     versions:
+      "16.2.0_20261109":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.2.0_20261109/xtensa-esp-elf-16.2.0_20261109-x86_64-w64-mingw32.zip
+        sha256: 8de83704fdcf58189e337cbc63a1167a3c3cc078e193efa7fdc113bdf000c337
       "16.1.0_20260609":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.1.0_20260609/xtensa-esp-elf-16.1.0_20260609-x86_64-w64-mingw32.zip
         sha256: cb59cbfe7f8ce35700dc407e4ce17af95576cc11285e024caea8a2bd6e590da9
@@ -441,9 +444,6 @@ espressif:
       "14.2.0_20260121":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20260121/xtensa-esp-elf-14.2.0_20260121-x86_64-w64-mingw32.zip
         sha256: 82cbe0353c2e7c96acc8755c854aaa2d93d346c6a378fc692e60b3912c560108
-      "14.2.0_20251219":
-        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251219/xtensa-esp-elf-14.2.0_20251219-x86_64-w64-mingw32.zip
-        sha256: 382ec0a7053cfb63d6cbf56089046ea919ddd77107292cb7bb1f23d7b0859586
       "14.2.0_20251208":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251208/xtensa-esp-elf-14.2.0_20251208-x86_64-w64-mingw32.zip
         sha256: 9295d0d2f847c1424d81c88f0b4064bbc72224bf7b93a50d12893a99e13b154f
@@ -484,6 +484,9 @@ espressif:
   riscv32-esp-elf:
     description: RISC-V bare-metal for ESP32-C/H series
     versions:
+      "16.2.0_20261109":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.2.0_20261109/riscv32-esp-elf-16.2.0_20261109-x86_64-w64-mingw32.zip
+        sha256: 96b611f0f91de7689f616e3feefd1ce555a81e419b2b313218759fe0788fea54
       "16.1.0_20260609":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.1.0_20260609/riscv32-esp-elf-16.1.0_20260609-x86_64-w64-mingw32.zip
         sha256: 70acfe653e6245b4afc3f2d22863445d2a999f0987f3e79b1814b26118284770
@@ -508,9 +511,6 @@ espressif:
       "14.2.0_20260121":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20260121/riscv32-esp-elf-14.2.0_20260121-x86_64-w64-mingw32.zip
         sha256: c2734714e59f684b74d1cb278f75b4ae9ec546aa1e55d73786ef039410e4a8f7
-      "14.2.0_20251219":
-        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251219/riscv32-esp-elf-14.2.0_20251219-x86_64-w64-mingw32.zip
-        sha256: 476f8a81bd4423bbbaacec727dfc8c53eeb2711b6e8a86e40e41a883b5be1e82
       "14.2.0_20251208":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251208/riscv32-esp-elf-14.2.0_20251208-x86_64-w64-mingw32.zip
         sha256: 74d1d2a018eea6705fa34d6c5387729b85843cb829a58b287cc6074a92f7184f
