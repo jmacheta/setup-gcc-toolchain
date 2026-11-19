@@ -471,9 +471,6 @@ espressif:
       "14.2.0_20260121":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20260121/xtensa-esp-elf-14.2.0_20260121-aarch64-linux-gnu.tar.xz
         sha256: 80ae10ce3d6c02e8c06213f03cac343c4ef6f0fbd89f28530b918f7a1006f1eb
-      "14.2.0_20251219":
-        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251219/xtensa-esp-elf-14.2.0_20251219-aarch64-linux-gnu.tar.xz
-        sha256: 53a69b93ff06c0c3fcd6a5fa9aaccbd5de99ddf359fce7af1dcdcc81ed12164f
       "14.2.0_20251208":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251208/xtensa-esp-elf-14.2.0_20251208-aarch64-linux-gnu.tar.xz
         sha256: bf27114cc3a5b39e6483ce665526c2831474ee5c350012bd85bbe910e46dee16
@@ -541,9 +538,6 @@ espressif:
       "14.2.0_20260121":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20260121/riscv32-esp-elf-14.2.0_20260121-aarch64-linux-gnu.tar.xz
         sha256: 61bea5c55a6a5a592b97a822e7ee5f75618a00d24441ce15e3a06f57da7188c9
-      "14.2.0_20251219":
-        url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251219/riscv32-esp-elf-14.2.0_20251219-aarch64-linux-gnu.tar.xz
-        sha256: 666f5886ae7b55f28eed80d3efea5bdd9158689b91bcdc485c280459c6951d6b
       "14.2.0_20251208":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-14.2.0_20251208/riscv32-esp-elf-14.2.0_20251208-aarch64-linux-gnu.tar.xz
         sha256: 5603027f6b0ffe1a06898ac17bb773071845088f8302f00bd80739ab08b5b96c
