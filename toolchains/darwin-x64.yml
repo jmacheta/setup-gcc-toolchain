@@ -52,3 +52,13 @@ espressif:
       "16.1.0_20260609":
         url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.1.0_20260609/xtensa-esp-elf-16.1.0_20260609-x86_64-apple-darwin.tar.xz
         sha256: c79d365223cec0e876fe0b25970a155ba9cddc2ee4130173944efe0ce1370d89
+
+  riscv32-esp-elf:
+    description: RISC-V bare-metal for ESP32-C/H series
+    versions:
+      "16.2.0_20261109":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.2.0_20261109/riscv32-esp-elf-16.2.0_20261109-x86_64-apple-darwin.tar.xz
+        sha256: 0d85515bd4f67ce34a4edf079170f9525ce12a428765f119ea547d0fbda405a7
+      "16.1.0_20260609":
+        url: https://github.com/espressif/crosstool-NG/releases/download/esp-16.1.0_20260609/riscv32-esp-elf-16.1.0_20260609-x86_64-apple-darwin.tar.xz
+        sha256: 0bd723258440e9fd398f610abc848471f3d362c102a3bbb7f9a1691df64e9abc

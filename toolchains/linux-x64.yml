@@ -702,3 +702,13 @@ bootlin:
       "stable-2025.08-1":
         url: https://toolchains.bootlin.com/downloads/releases/toolchains/riscv64-lp64d/tarballs/riscv64-lp64d--glibc--stable-2025.08-1.tar.xz
         sha256: 45209041e9ba5054aa9787c40bce0ac1e48b78528b6635b79dfb4253e1491ff0
+
+  riscv32-buildroot-linux-gnu:
+    description: RISC-V 32-bit Linux (glibc, ilp32d) — Bootlin stable toolchain
+    versions:
+      "stable-2026.08-1":
+        url: https://toolchains.bootlin.com/downloads/releases/toolchains/riscv32-ilp32d/tarballs/riscv32-ilp32d--glibc--stable-2026.08-1.tar.xz
+        sha256: 716cdf72fbac22707547691c656c50f8c0011d5251668d0aa1bb72ec48083192
+      "stable-2025.08-1":
+        url: https://toolchains.bootlin.com/downloads/releases/toolchains/riscv32-ilp32d/tarballs/riscv32-ilp32d--glibc--stable-2025.08-1.tar.xz
+        sha256: d42680e926542595c4c87629d33f5f90aac1e9a964c8955089e0514caa01b78f
