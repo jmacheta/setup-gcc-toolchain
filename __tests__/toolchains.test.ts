@@ -112,6 +112,17 @@ describe("resolveToolchain", () => {
     expect(entry.sha256).toHaveLength(64);
   });
 
+  it("resolves riscv32-buildroot-linux-gnu (bootlin) on linux-x64", () => {
+    const entry = resolveToolchain(REPO_ROOT, "riscv32-buildroot-linux-gnu", "latest", "linux-x64");
+    expect(entry.url).toContain("riscv32-ilp32d--glibc--stable");
+    expect(entry.sha256).toHaveLength(64);
+  });
+
+  it("resolves riscv32-esp-elf (espressif) on darwin-x64 and darwin-arm64", () => {
+    expect(resolveToolchain(REPO_ROOT, "riscv32-esp-elf", "latest", "darwin-x64").url).toContain("x86_64-apple-darwin");
+    expect(resolveToolchain(REPO_ROOT, "riscv32-esp-elf", "latest", "darwin-arm64").url).toContain("aarch64-apple-darwin");
+  });
+
   it("resolves arm-none-eabi (xpack) on darwin-arm64", () => {
     const entry = resolveToolchain(REPO_ROOT, "arm-none-eabi", "15.2.1-1.1", "darwin-arm64");
     expect(entry.url).toContain("darwin-arm64");
